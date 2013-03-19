@@ -52,7 +52,7 @@ int main() {
     const auto width = 600u, height = 800u;
 
     // create the window
-    sf::Window window(sf::VideoMode(height, width), "OpenGL", sf::Style::Default, sf::ContextSettings(32));
+    sf::Window window(sf::VideoMode(height, width), "OpenGL", sf::Style::Close, sf::ContextSettings(32));
     window.setVerticalSyncEnabled(true);
 
     // initializing viewport and perspective
