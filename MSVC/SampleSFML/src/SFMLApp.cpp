@@ -55,6 +55,10 @@ bool SFMLApp::OnInit() {
     // clearing screen color
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f); // rgba
 
+    // loading font...
+    if (!_font.loadFromFile("geo_1.ttf"))
+        return false;
+
     return true;
 }
 
@@ -64,6 +68,7 @@ void SFMLApp::OnRender()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     RenderScene();
+    RenderText();
 }
 
 void SFMLApp::OnCleanup() {
@@ -73,9 +78,6 @@ void SFMLApp::OnCleanup() {
 // Drawing a pixel array
 void SFMLApp::RenderPixels()
 {
-    // Clear the window with current clearing color
-    glClear(GL_COLOR_BUFFER_BIT);
-
     const auto width = 800u, height = 600u;
     const auto bpp = 3u;
     const auto width_bytes = bpp*width;
@@ -101,12 +103,23 @@ void SFMLApp::RenderPixels()
 }
 
 ///////////////////////////////////////////////////////////
+// Drawing text
+void SFMLApp::RenderText()
+{   
+    sf::Text text(sf::String(L"ESC = Closing the App"), _font, 15u);
+    text.move(4, 0);
+
+    // preserve opengl states! if you don't do this, the text will overwrite
+    // everything else we told opengl earlier! (like drawing a triangle)
+    _window.pushGLStates();
+    _window.draw(text);
+    _window.popGLStates();
+}
+
+///////////////////////////////////////////////////////////
 // Drawing a opengl scene
 void SFMLApp::RenderScene()
 {
-    // Clear the window with current clearing color
-    glClear(GL_COLOR_BUFFER_BIT);
-
     glRotatef(1.f, 0.0f, 0.0f, 1.0f);
     glRotatef(1.5f, 0.0f, 1.0f, 0.0f);
 

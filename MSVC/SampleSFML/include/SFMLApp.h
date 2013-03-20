@@ -15,6 +15,7 @@ public:
 private:
     // helper
     void RenderPixels();
+    void RenderText();
     void RenderScene();
 
     // render loop events
@@ -30,4 +31,5 @@ private:
     // instance data
     bool _running;
     sf::RenderWindow  _window;
+    sf::Font          _font;
 };
