@@ -3,10 +3,13 @@
 #include <Windows.h>
 #include <tchar.h>
 #include <cassert>
-#include <string>
 
 // undefining max macro from windows.h, it collides with std::max
 #undef max
+
+// tools for debug builds
+#ifdef _DEBUG
+#include <string>
 
 #if defined(_UNICODE)
 typedef std::wstring tstring;
@@ -19,3 +22,6 @@ inline void Log(TCHAR* msg) {
     str.append(_T("\n"));
     OutputDebugString(str.c_str());
 }
+#else
+inline void Log(TCHAR* msg) {}
+#endif
