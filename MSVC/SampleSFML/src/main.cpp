@@ -49,14 +49,14 @@ void ChangeSize(int w, int h)
 }
 
 int main() {
-    const auto width = 600u, height = 800u;
+    const auto width = 800u, height = 600u;
 
     // create the window
-    sf::Window window(sf::VideoMode(height, width), "OpenGL", sf::Style::Close, sf::ContextSettings(32));
+    sf::Window window(sf::VideoMode(width, height), "OpenGL", sf::Style::Close, sf::ContextSettings(32));
     window.setVerticalSyncEnabled(true);
 
     // initializing viewport and perspective
-    ChangeSize(height, width);
+    ChangeSize(width, height);
 
     // load resources, initialize the OpenGL states, ...
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
