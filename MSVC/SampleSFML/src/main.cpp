@@ -48,6 +48,37 @@ void ChangeSize(int w, int h)
     glMatrixMode(GL_MODELVIEW);
 }
 
+///////////////////////////////////////////////////////////
+// Drawing a pixel array
+void RenderPixels()
+{
+    // Clear the window with current clearing color
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    const auto width = 800u, height = 600u;
+    const auto bpp = 3u;
+    const auto width_bytes = bpp*width;
+
+    auto data = new BYTE[bpp*width*height];
+    memset(data, 0, bpp*width*height);
+
+    for (auto y = 0u; y < height; ++y) {
+        for (auto x = 0u; x < width_bytes; x += bpp) {
+            auto idx = y*width_bytes + x;
+            data[idx]   = 0;     // R
+            data[++idx] = y%256; // G
+            data[++idx] = 0;     // B
+        }
+    }
+
+    glDrawPixels(width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+    delete[] data;
+
+    // Flush drawing commands
+    glFlush();
+}
+
 int main() {
     const auto width = 800u, height = 600u;
 
@@ -85,7 +116,8 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // draw...
-        RenderScene();
+        //RenderScene();
+        RenderPixels();
 
         // end the current frame (internally swaps the front and back buffers)
         window.display();
