@@ -57,7 +57,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\extlib\SFML\include\;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <PreprocessorDefinitions>_UNICODE;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_UNICODE;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <ForcedUsingFiles>
       </ForcedUsingFiles>
@@ -70,7 +70,7 @@
       </LinkStatus>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalDependencies>glu32.lib;SFML/lib/sfml-system-s-d.lib;SFML/lib/sfml-window-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;SFML/lib/sfml-system-s-d.lib;SFML/lib/sfml-window-s-d.lib;SFML/lib/sfml-graphics-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
@@ -83,7 +83,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\extlib\SFML\include\;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_UNICODE;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_UNICODE;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ForcedUsingFiles>
       </ForcedUsingFiles>
       <ForcedIncludeFiles>Common.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
@@ -95,7 +95,7 @@
       <AdditionalLibraryDirectories>..\..\extlib\</AdditionalLibraryDirectories>
       <LinkStatus>
       </LinkStatus>
-      <AdditionalDependencies>glu32.lib;SFML/lib/sfml-system-s.lib;SFML/lib/sfml-window-s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glu32.lib;SFML/lib/sfml-system-s.lib;SFML/lib/sfml-window-s.lib;SFML/lib/sfml-graphics-s.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>
