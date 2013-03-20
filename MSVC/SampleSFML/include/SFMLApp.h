@@ -29,5 +29,5 @@ private:
 private:
     // instance data
     bool _running;
-    sf::Window  _window;
+    sf::RenderWindow  _window;
 };
