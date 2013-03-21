@@ -15,8 +15,8 @@ DrawingAlgoApp::Pixel::Pixel(uint R, uint G, uint B)
 //
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
-    : _width(400u),
-    _height(300u),
+    : _width(800u),
+    _height(600u),
     _num_pixels(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0)
