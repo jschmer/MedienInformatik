@@ -1,19 +1,32 @@
 #include <SFMLApp.h>
 
+#include <cstdio>
 #include <algorithm>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 
+const auto HELP_TEXT = L"\
+ESC = Close the App\n\
+F = Toggle FPS\n\
+";
+
 SFMLApp::SFMLApp()
     : _running(true),
-    _show_help(false)
+    _show_help(false),
+    _show_fps(false),
+    _fps(0),
+    _frametime(0.f),
+    _fps_clock(),
+    _frame_clock()
 {
     _help_info = sf::Text(sf::String(L"Press 'h' for help..."), sf::Font(), 15u);
     _help_info.setPosition(4, 0);
 
-    _help_text = sf::Text(sf::String(L"ESC = Close the App"), sf::Font(), 15u);
+    _help_text = sf::Text(sf::String(HELP_TEXT), sf::Font(), 15u);
     _help_text.setPosition(4, 30);
+
+    _fps_text = sf::Text("", sf::Font(), 15u);
 }
 
 SFMLApp::~SFMLApp()
@@ -36,11 +49,17 @@ int SFMLApp::Run() {
             OnEvent(event);
         }
 
+        // start the clock for getting time to render a frame
+        _frame_clock.restart();
+
         // render something
         OnRender();
 
         // end the current frame (internally swaps the front and back buffers)
         _window.display();
+
+        // store the elapsed time for rendering a frame
+        _frametime = _frame_clock.getElapsedTime().asSeconds();
     }
 
     // do the cleanup
@@ -56,6 +75,7 @@ bool SFMLApp::OnInit() {
 
     _help_text.setFont(_font);
     _help_info.setFont(_font);
+    _fps_text.setFont(_font);
 
     // create the window
     const auto width = 800u, height = 600u;
@@ -82,6 +102,7 @@ void SFMLApp::OnRender()
 
     RenderScene();
     RenderHelpText();
+    RenderFPS();
 }
 
 void SFMLApp::OnCleanup() {
@@ -110,7 +131,7 @@ void SFMLApp::RenderHelpText()
 void SFMLApp::RenderScene()
 {
     glRotatef(1.f, 0.0f, 0.0f, 1.0f);
-    glRotatef(1.5f, 0.0f, 1.0f, 0.0f);
+    glRotatef(1.7f, 0.0f, 1.0f, 0.0f);
 
     glBegin(GL_TRIANGLES);
         glVertex3f(-0.5, -0.5, 0.0);
@@ -120,6 +141,47 @@ void SFMLApp::RenderScene()
 
     // Flush drawing commands
     glFlush();
+}
+
+///////////////////////////////////////////////////////////
+// Drawing the FPS (counts the produced frames in one second)
+void SFMLApp::RenderFPS()
+{
+    ++_fps;
+    auto elapsed = _fps_clock.getElapsedTime().asSeconds();
+
+    // display fps after one second
+    if (elapsed >= 1.f) {
+        // convert to c-string
+        char fps_buffer[32];
+        sprintf_s(fps_buffer, "%20d", _fps);
+
+        // trim leading whitespace
+        auto fps_start = fps_buffer;
+        while (*fps_start == ' ')
+            ++fps_start;
+
+        // convert to sf::String
+        sf::String fps_str(fps_start);
+
+        // prepend descriptive text
+        fps_str.insert(0, sf::String("FPS: "));
+
+        // generate a SFML text for rendering
+        _fps_text.setString(fps_str);
+        _fps_text.setPosition(4, static_cast<float>(_window.getSize().y - 20u));
+
+        // reset fps and clock
+        _fps = 0;
+        _fps_clock.restart(); 
+    }
+
+    if (_show_fps) {
+        // draw the fps text
+        _window.pushGLStates();
+        _window.draw(_fps_text);
+        _window.popGLStates();
+    }
 }
 
 ///////////////////////////////////////////////////////////
@@ -168,6 +230,9 @@ void SFMLApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shi
     switch (key) {
     case Key::H:
         _show_help = !_show_help;
+        break;
+    case Key::F:
+        _show_fps = !_show_fps;
         break;
     }
 }

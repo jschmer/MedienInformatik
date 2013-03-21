@@ -26,6 +26,7 @@ public:
 private:
     void RenderHelpText();
     void RenderScene();
+    void RenderFPS();
 
     // render loop events
 protected:
@@ -46,7 +47,14 @@ protected:
     sf::Font          _font;
     sf::View          _view;
 
+    bool              _show_help;
     sf::Text          _help_text;
     sf::Text          _help_info;
-    bool              _show_help;
+    sf::Text          _fps_text;
+
+    sf::Clock         _frame_clock;
+    float             _frametime;
+    sf::Clock         _fps_clock;
+    int               _fps;
+    bool              _show_fps;
 };
