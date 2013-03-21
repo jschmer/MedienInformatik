@@ -55,7 +55,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\extlib\SFML\include\;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\extlib\SFML\include\;..\SFMLApp\include\;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>_DEBUG;_UNICODE;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -65,12 +65,12 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\extlib\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\SFMLApp\lib</AdditionalLibraryDirectories>
       <LinkStatus>
       </LinkStatus>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalDependencies>glu32.lib;SFML/lib/sfml-system-s-d.lib;SFML/lib/sfml-window-s-d.lib;SFML/lib/sfml-graphics-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SFMLApp-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
@@ -88,7 +88,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\extlib\SFML\include\;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\extlib\SFML\include\;..\SFMLApp\include\;include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;_UNICODE;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ForcedUsingFiles>
       </ForcedUsingFiles>
@@ -98,10 +98,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\extlib\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\SFMLApp\lib</AdditionalLibraryDirectories>
       <LinkStatus>
       </LinkStatus>
-      <AdditionalDependencies>glu32.lib;SFML/lib/sfml-system-s.lib;SFML/lib/sfml-window-s.lib;SFML/lib/sfml-graphics-s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SFMLApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>
@@ -115,14 +115,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Event.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\SFMLApp.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="include\Common.h" />
-    <ClInclude Include="include\Event.h" />
-    <ClInclude Include="include\SFMLApp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
