@@ -23,7 +23,7 @@ public:
 
 
     // helper functions
-private:
+protected:
     void RenderHelpText();
     void RenderScene();
     void RenderFPS();
