@@ -52,6 +52,9 @@ int SFMLApp::Run() {
         // start the clock for getting time to render a frame
         _frame_clock.restart();
 
+        // clear the buffers
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         // render something
         OnRender();
 
@@ -97,9 +100,6 @@ bool SFMLApp::OnInit() {
 
 void SFMLApp::OnRender()
 {
-    // clear the buffers
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     RenderScene();
     RenderHelpText();
     RenderFPS();
