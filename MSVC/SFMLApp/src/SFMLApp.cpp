@@ -9,12 +9,14 @@
 const auto HELP_TEXT = L"\
 ESC = Close the App\n\
 F = Toggle FPS\n\
+M = Toggle Mouse position\n\
 ";
 
 SFMLApp::SFMLApp()
     : _running(true),
     _show_help(false),
     _show_fps(false),
+    _show_mouse_pos(true),
     _fps(0),
     _frametime(0.f),
     _fps_clock(),
@@ -27,6 +29,8 @@ SFMLApp::SFMLApp()
     _help_text.setPosition(4, 30);
 
     _fps_text = sf::Text("", sf::Font(), 15u);
+
+    _mouse_pos = sf::Text("", sf::Font(), 15u);
 }
 
 SFMLApp::~SFMLApp()
@@ -71,14 +75,22 @@ int SFMLApp::Run() {
     return EXIT_SUCCESS;
 }
 
-bool SFMLApp::OnInit() {
+bool SFMLApp::InitFont(const char* font_path) {
     // loading font...
-    if (!_font.loadFromFile("geo_1.ttf"))
+    if (!_font.loadFromFile(font_path))
         return false;
 
     _help_text.setFont(_font);
     _help_info.setFont(_font);
     _fps_text.setFont(_font);
+    _mouse_pos.setFont(_font);
+
+    return true;
+}
+
+bool SFMLApp::OnInit() {
+    if (!InitFont("geo_1.ttf"))
+        return false;
 
     // create the window
     const auto width = 800u, height = 600u;
@@ -103,6 +115,7 @@ void SFMLApp::OnRender()
     RenderScene();
     RenderHelpText();
     RenderFPS();
+    RenderMousePos();
 }
 
 void SFMLApp::OnCleanup() {
@@ -169,7 +182,7 @@ void SFMLApp::RenderFPS()
 
         // generate a SFML text for rendering
         _fps_text.setString(fps_str);
-        _fps_text.setPosition(4, static_cast<float>(_window.getSize().y - 20u));
+        _fps_text.setPosition(4, static_cast<float>(_window.getSize().y - 40u));
 
         // reset fps and clock
         _fps = 0;
@@ -180,6 +193,50 @@ void SFMLApp::RenderFPS()
         // draw the fps text
         _window.pushGLStates();
         _window.draw(_fps_text);
+        _window.popGLStates();
+    }
+}
+
+///////////////////////////////////////////////////////////
+// Drawing the current mouse position
+void SFMLApp::RenderMousePos() {
+    // convert mouse positions to c-string
+    char mouse_x[32];
+    char mouse_y[32];
+    sprintf_s(mouse_x, "%5d", _current_mouse_pos.x);
+    sprintf_s(mouse_y, "%5d", _current_mouse_pos.y);
+
+    // trim leading whitespace
+    auto mouse_x_start = mouse_x;
+    auto mouse_y_start = mouse_y;
+    while (*mouse_x_start == ' ')
+        ++mouse_x_start;
+    while (*mouse_y_start == ' ')
+        ++mouse_y_start;
+
+    // get length
+    auto xlen = strlen(mouse_x_start);
+    auto ylen = strlen(mouse_y_start);
+
+    // catch the case if the mouse position is too long
+    if (xlen + ylen + 1 >= 32)
+        return;
+
+    // concat them
+    char mouse_pos[32];
+    sprintf_s(mouse_pos, "%s/%s", mouse_x_start, mouse_y_start);
+
+    // convert to sf::String
+    sf::String mouse_pos_str(mouse_pos);
+
+    // generate a SFML text for rendering
+    _mouse_pos.setString(mouse_pos_str);
+    _mouse_pos.setPosition(4, static_cast<float>(_window.getSize().y - 20u));
+
+    if (_show_mouse_pos) {
+        // draw the mouse position text
+        _window.pushGLStates();
+        _window.draw(_mouse_pos);
         _window.popGLStates();
     }
 }
@@ -234,5 +291,13 @@ void SFMLApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shi
     case Key::F:
         _show_fps = !_show_fps;
         break;
+    case Key::M:
+        _show_mouse_pos = !_show_mouse_pos;
+        break;
     }
+}
+
+void SFMLApp::OnMouseMoved(int x, int y) {
+    _current_mouse_pos.x = x;
+    _current_mouse_pos.y = y;
 }

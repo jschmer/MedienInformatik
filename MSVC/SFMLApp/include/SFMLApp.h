@@ -21,12 +21,13 @@ public:
     // @brief   Run the program (e.g. its render loop)
     virtual int Run();
 
-
     // helper functions
 protected:
+    bool InitFont(const char* font_path = "geo_1.ttf");
     void RenderHelpText();
     void RenderScene();
     void RenderFPS();
+    void RenderMousePos();
 
     // render loop events
 protected:
@@ -39,6 +40,7 @@ protected:
     virtual void OnClosed() override;
     virtual void OnResized(uint width, uint height) override;
     virtual void OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) override;
+    virtual void OnMouseMoved(int x, int y);
 
     // instance data
 protected:
@@ -51,10 +53,14 @@ protected:
     sf::Text          _help_text;
     sf::Text          _help_info;
     sf::Text          _fps_text;
+    sf::Text          _mouse_pos;
 
     sf::Clock         _frame_clock;
     float             _frametime;
     sf::Clock         _fps_clock;
     int               _fps;
     bool              _show_fps;
+
+    bool              _show_mouse_pos;
+    sf::Vector2i      _current_mouse_pos;
 };
