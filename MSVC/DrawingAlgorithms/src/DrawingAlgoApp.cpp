@@ -1,6 +1,13 @@
 #include <DrawingAlgoApp.h>
 
+#include <algorithm>
+
 #include <SFML/OpenGL.hpp>
+
+// signum function
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 //
 // Pixel struct definition
@@ -30,6 +37,8 @@ DrawingAlgoApp::DrawingAlgoApp()
 DrawingAlgoApp::~DrawingAlgoApp()
 {}
 
+//
+// render loop events
 bool DrawingAlgoApp::OnInit() {
     // loading font...
     if (!_font.loadFromFile("geo_1.ttf"))
@@ -103,19 +112,58 @@ void DrawingAlgoApp::RenderPixelArray() {
 // drawing algorithms
 void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2) {
     Pixel pix(0, 255, 0);
-    
-    int dx = x2 - x1; 
-    int dy = y2 - y1; 
-    int const1 = dx + dx; 
-    int const2 = dy + dy; 
-    int error = const2 - dx; 
-    while(x1 <= x2) { 
-        setPixel(x1, y1, pix); 
-        x1++; 
-        if(error <= 0) 
-            error += const2; 
-        else { 
-            y1++; error += const2 - const1; 
+
+    // Startpunkt
+    int x = x1, y = y1;
+
+    int dx = x2 - x1;
+    int dy = y2 - y1;
+
+    // Schrittrichtung für Diagonalschritt ermitteln (sgn liefert -1, 0, 1)
+    int diagonal_dx = sgn(dx);
+    int diagonal_dy = sgn(dy);
+
+    int errSR, errLR;               // Fehleranpassung in schneller Richtung (SR) und langsamer Richtung (LR)
+    int parallel_dx, parallel_dy;   // Schrittweite für Parallelschritt 
+    int num_elements;               // Anzahl zu zeichnender Pixel
+
+    // Unterscheidung zwischen schneller und langsamer Richtung
+    if (std::abs(dx) > std::abs(dy)) {
+        // x ist schnelle Richtung, d.h. mache keinen Schritt in y-Richtung bei Parallelschritt
+        parallel_dx = diagonal_dx;
+        parallel_dy = 0;
+        errSR = std::abs(dx)*2;
+        errLR = std::abs(dy)*2;
+        num_elements = std::abs(dx);    // Anzahl zu zeichnender Pixel in schneller Richtung
+    } else {
+        // y ist schnelle Richtung, d.h. mache keinen Schritt in x-Richtung bei Parallelschritt
+        parallel_dx = 0;
+        parallel_dy = diagonal_dy;
+        errSR = std::abs(dy)*2;
+        errLR = std::abs(dx)*2;
+        num_elements = std::abs(dy);    // Anzahl zu zeichnender Pixel in schneller Richtung
+    }
+
+    // Fehlervariable initialisieren
+    int error = errLR - num_elements;
+
+    for (int i = 0; i < num_elements; ++i) {
+        setPixel(x, y, pix);
+        
+        // Fehlervariable aktualisieren (Schritt in schneller Richtung)
+        error += errLR;
+        if(error <= 0) {
+            // Nur Schritt in schnelle Richtung (nur parallel)
+            x += parallel_dx;
+            y += parallel_dy;
+        }
+        else {
+            // Schritt in langsame und schnelle Richtung (diagonal)
+            x += diagonal_dx;
+            y += diagonal_dy;
+
+            // Fehlervariable aktualisieren (Schritt in langsamer Richtung)
+            error -= errSR;
         }
     }
 }
@@ -128,6 +176,8 @@ void DrawingAlgoApp::DrawLineMidpoint(uint x1, uint y1, uint x2, uint y2) {
     int dx = x2 - x1;
     int dy = y2 - y1;
     int f = dy - dx/2;
+
+    // immer Schritt in schnelle Richtung, gelegentlich in langsame Richtung
     for (int i = 1; i <= dx; ++i) { 
         setPixel(x, y, pix);
         x++;
@@ -202,15 +252,15 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
     
     switch (_draw_type) {
     case DrawingType::Line:
-        DrawLineMidpoint(cachex, cachey, x, y);
+        DrawLineBresenham(cachex, cachey, x, y);
         break;
     case DrawingType::Circle:
-        // calc distance between cache and this point
+        // calc distance between cache and current point
         auto dx = cachex - x;
         auto dy = cachey - y;
         auto radius = std::sqrt(dx*dx + dy*dy);
 
-        DrawCircle(_mouse_pos_cache.x, _mouse_pos_cache.y, static_cast<int>(radius));
+        DrawCircle(cachex, cachey, static_cast<int>(radius));
         break;
     }
 }
