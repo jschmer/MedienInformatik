@@ -13,6 +13,7 @@ class DrawingAlgoApp : public SFMLApp {
 
         Pixel();
         Pixel(uint R, uint G, uint B);
+        Pixel(uint hex); // 0xRRGGBB
     };
 
     enum class DrawingType {

@@ -19,6 +19,12 @@ DrawingAlgoApp::Pixel::Pixel(uint R, uint G, uint B)
     : R(R), G(G), B(B)
 {}
 
+DrawingAlgoApp::Pixel::Pixel(uint hex) {
+    R = (hex & 0xFF0000) >> 2*8;
+    G = (hex & 0x00FF00) >> 8;
+    B = hex & 0x0000FF;
+}
+
 //
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
