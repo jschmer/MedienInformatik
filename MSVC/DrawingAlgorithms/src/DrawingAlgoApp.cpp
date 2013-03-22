@@ -40,13 +40,7 @@ DrawingAlgoApp::~DrawingAlgoApp()
 //
 // render loop events
 bool DrawingAlgoApp::OnInit() {
-    // loading font...
-    if (!_font.loadFromFile("geo_1.ttf"))
-        return false;
-
-    _help_text.setFont(_font);
-    _help_info.setFont(_font);
-    _fps_text.setFont(_font);
+    Super::InitFont();
 
     // adjusting help text
     const auto append_text = "\
@@ -74,17 +68,13 @@ C = Clear Pixelbuffer\n\
 }
 
 void DrawingAlgoApp::OnRender() {
-    // do some drawing (into pixel buffer)
-    //DrawLineBresenham(0, 0, 50, 50);
-    //DrawLineMidpoint(10, 0, 60, 50);
-    //DrawCircle(50, 50, 10);
-
     // render the pixel buffer 
     RenderPixelArray();
 
     // render "HUD"
     Super::RenderHelpText();
     Super::RenderFPS();
+    Super::RenderMousePos();
 }
 
 //
@@ -193,10 +183,12 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius) {
 
     int x1 = 0;
     int y1 = radius;
-    int f = 1-radius;
+    int f  = 1 - radius;
     int dx = 3;
     int dy = 2 - 2*radius;
-    while(x1 <= y1) { 
+
+    while(x1 <= y1) {
+        // drawing each possible arc
         setPixel(posx+x1, posy-y1, pix);
         setPixel(posx+x1, posy+y1, pix);
         setPixel(posx-x1, posy-y1, pix);
@@ -205,14 +197,15 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius) {
         setPixel(posx+y1, posy+x1, pix);
         setPixel(posx-y1, posy-x1, pix);
         setPixel(posx-y1, posy+x1, pix);
+
         x1++;
-        if(f > 0) { 
-            y1--; 
-            f += dy; 
-            dy += 2; 
-        } 
-        f += dx; 
-        dx +=2; 
+        if(f > 0) {
+            y1--;
+            f  += dy;
+            dy += 2;
+        }
+        f  += dx;
+        dx +=2;
     }
 }
 
