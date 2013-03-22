@@ -8,7 +8,7 @@
 * Line
     * Draw a line with the mouse
     * Start point will be the MouseDown location
-    * End point MouseUp location
+    * End point will be the MouseUp location
 * Circle
     * Draw a line with the mouse
     * Center will be the MouseDown location
