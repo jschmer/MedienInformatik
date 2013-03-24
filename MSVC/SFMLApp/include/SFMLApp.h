@@ -16,6 +16,7 @@
 class SFMLApp : public Event {
 public:
     SFMLApp();
+    SFMLApp(uint width, uint height, uint style = sf::Style::Default, const char* app_name = "SFMLApp", sf::ContextSettings gl_context = sf::ContextSettings(32));
     ~SFMLApp();
 
     // @brief   Run the program (e.g. its render loop)
@@ -44,6 +45,11 @@ protected:
 
     // instance data
 protected:
+    uint _width, _height;
+    uint                _style;     // a combination of sf::Style
+    sf::String          _app_name;
+    sf::ContextSettings _gl_context;
+
     bool _running;
     sf::RenderWindow  _window;
     sf::Font          _font;

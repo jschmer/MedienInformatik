@@ -13,6 +13,11 @@ M = Toggle Mouse position\n\
 ";
 
 SFMLApp::SFMLApp()
+{
+    SFMLApp(800u, 600u);
+}
+
+SFMLApp::SFMLApp(uint width, uint height, uint style, const char* app_name, sf::ContextSettings gl_context)
     : _running(true),
     _show_help(false),
     _show_fps(false),
@@ -20,7 +25,12 @@ SFMLApp::SFMLApp()
     _fps(0),
     _frametime(0.f),
     _fps_clock(),
-    _frame_clock()
+    _frame_clock(),
+    _width(width),
+    _height(height),
+    _style(style),
+    _app_name(app_name),
+    _gl_context(gl_context)
 {
     _help_info = sf::Text(sf::String(L"Press 'h' for help..."), sf::Font(), 15u);
     _help_info.setPosition(4, 0);
@@ -93,8 +103,7 @@ bool SFMLApp::OnInit() {
         return false;
 
     // create the window
-    const auto width = 800u, height = 600u;
-    _window.create(sf::VideoMode(width, height), "OpenGL", sf::Style::Default, sf::ContextSettings(32));
+    _window.create(sf::VideoMode(_width, _height), _app_name, _style, _gl_context);
     _window.setVerticalSyncEnabled(true);
 
     // getting the view
@@ -102,7 +111,7 @@ bool SFMLApp::OnInit() {
     _window.setView(_view);
 
     // initializing viewport and perspective
-    OnResized(width, height);
+    OnResized(_width, _height);
 
     // Set the screen color for clearing
     glClearColor(0.0f, 0.0f, 1.0f, 1.0f); // rgba
