@@ -1,6 +1,6 @@
 # Simple SFML Application implementation
 
-Achtung: Nutzt neue Features von C++11! Siehe jschmer/MedienInformatik für Details.
+Achtung: Nutzt neue Features von C++11! Siehe [README](https://github.com/jschmer/MedienInformatik) für Details.
 
 ### Provides
 * a Event class with
