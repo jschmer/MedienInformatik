@@ -1,5 +1,7 @@
 # Implementation of basic 2D drawing algorithms 
 
+Attention: Uses new features of C++11! See jschmer/MedienInformatik for details.
+
 ### Supports
 * Bresenham
 * Midpoint
