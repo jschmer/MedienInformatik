@@ -36,7 +36,7 @@ DrawingAlgoApp::DrawingAlgoApp()
     _pixel_data.reset(new Pixel[_width*_height]);
 
     // clear pixel data
-    memset(_pixel_data.get(), 0, _width*_height);
+    memset(_pixel_data.get(), 0, sizeof(Pixel)*_width*_height);
 }
 
 DrawingAlgoApp::~DrawingAlgoApp()
