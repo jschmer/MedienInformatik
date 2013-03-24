@@ -58,6 +58,6 @@ private:
 private:
     sf::Vector2i _mouse_pos_cache;
     DrawingType  _draw_type;
-    const uint   _width, _height, _num_pixels;
+    const uint   _num_pixels;
     std::unique_ptr<Pixel[]> _pixel_data; // _width * _height pixels
 };

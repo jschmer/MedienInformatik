@@ -28,8 +28,7 @@ DrawingAlgoApp::Pixel::Pixel(uint hex) {
 //
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
-    : _width(800u),
-    _height(600u),
+    : SFMLApp(800u, 600u, "Drawing Algorithms", sf::Style::Default),
     _num_pixels(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0)
@@ -46,26 +45,19 @@ DrawingAlgoApp::~DrawingAlgoApp()
 //
 // render loop events
 bool DrawingAlgoApp::OnInit() {
-    Super::InitFont();
+    Super::OnInit();
 
     // adjusting help text
-    const auto append_text = "\
-C = Clear Pixelbuffer\n\
-1 = Mode None\n\
-2 = Mode Line\n\
-3 = Mode Circle\n";
+    const auto append_text = R"(
+C = Clear Pixelbuffer
+1 = Mode None
+2 = Mode Line
+3 = Mode Circle
+)";
 
     auto help = _help_text.getString();
     help.insert(help.getSize(), append_text);
     _help_text.setString(help);
-
-    // create the window
-    _window.create(sf::VideoMode(_width, _height), "Drawing Algorithms", sf::Style::Default, sf::ContextSettings(32));
-    _window.setVerticalSyncEnabled(true);
-
-    // getting the view
-    _view = _window.getView();
-    _window.setView(_view);
 
     // Set the screen color for clearing
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // rgba
