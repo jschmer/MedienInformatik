@@ -13,11 +13,11 @@ M = Toggle Mouse position\n\
 ";
 
 SFMLApp::SFMLApp()
+    : SFMLApp(800u, 600u, "SFMLApp")
 {
-    SFMLApp(800u, 600u);
 }
 
-SFMLApp::SFMLApp(uint width, uint height, uint style, const char* app_name, sf::ContextSettings gl_context)
+SFMLApp::SFMLApp(uint width, uint height, const char* app_name, uint style, sf::ContextSettings gl_context)
     : _running(true),
     _show_help(false),
     _show_fps(false),

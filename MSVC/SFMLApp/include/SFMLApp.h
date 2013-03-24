@@ -15,10 +15,20 @@
 //
 class SFMLApp : public Event {
 public:
+    //
+    // @brief   Default application with a window size of 800x600 and application name "SFMLApp"
     SFMLApp();
-    SFMLApp(uint width, uint height, uint style = sf::Style::Default, const char* app_name = "SFMLApp", sf::ContextSettings gl_context = sf::ContextSettings(32));
+
+    //
+    // @param   width       Width of the application window
+    // @param   height      Height of the application window
+    // @param   app_name    Application name shown in the titlebar
+    // @param   style       Window style; A combination of sf::Style types
+    // @param   gl_context  Context settings passed to the underlying opengl context
+    SFMLApp(uint width, uint height, const char* app_name, uint style = sf::Style::Default, sf::ContextSettings gl_context = sf::ContextSettings(32));
     ~SFMLApp();
 
+    //
     // @brief   Run the program (e.g. its render loop)
     virtual int Run();
 
