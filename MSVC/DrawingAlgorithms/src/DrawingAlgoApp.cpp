@@ -45,7 +45,8 @@ DrawingAlgoApp::~DrawingAlgoApp()
 //
 // render loop events
 bool DrawingAlgoApp::OnInit() {
-    Super::OnInit();
+    if (!Super::OnInit())
+        return false;
 
     // adjusting help text
     const auto append_text = R"(
