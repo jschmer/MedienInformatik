@@ -50,6 +50,8 @@ private:
     void SetPixel(uint x, uint y, const Pixel &pix);
     void ClearPixelData();
 
+    void SaveAsPPM(const char* filename = "Screen_capture.ppm");
+
     //
     // drawing algorithms
 private:

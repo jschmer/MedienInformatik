@@ -1,6 +1,8 @@
 #include <DrawingAlgoApp.h>
 
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 
 #include <SFML/OpenGL.hpp>
 
@@ -28,7 +30,7 @@ DrawingAlgoApp::Pixel::Pixel(uint hex) {
 //
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
-    : Super(800u, 600u, "Drawing Algorithms", sf::Style::Default),
+    : Super(800u, 600u, "Drawing Algorithms", sf::Style::Close),
     _num_pixels(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0)
@@ -50,6 +52,7 @@ bool DrawingAlgoApp::OnInit() {
     // adjusting help text
     const auto append_text = R"(
 C = Clear Pixelbuffer
+X = Capture Screen
 Modes:
 1 = None
 2 = Line
@@ -100,6 +103,37 @@ void DrawingAlgoApp::RenderPixelArray() {
 
     // Flush drawing commands
     glFlush();
+}
+
+void DrawingAlgoApp::SaveAsPPM(const char* filename) {
+    using std::endl;
+    
+    const auto magic_number = "P6";
+    const auto bytes_per_pixel = 3;
+
+    std::stringstream ss;
+    ss << _width;
+    const auto width = ss.str();
+
+    ss = std::stringstream();
+    ss << _height;
+    const auto height = ss.str();
+
+    ss = std::stringstream();
+    ss << 255;
+    const auto max_color = ss.str();
+
+    std::ofstream out(filename);
+    out << magic_number << endl;
+    out << width << " " << height << endl;
+    out << max_color << "\n";
+
+    for (auto h = 0U; h < _height; ++h) {
+        for (auto w = 0U; w < _width; ++w) {
+             auto& pix = _pixel_data[(_height - h - 1)*_width + w];
+             out << pix.G << pix.B << pix.R;
+        }
+    }
 }
 
 //
@@ -276,6 +310,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         
         // clear bezier points
         _bezier_points.clear();
+        break;
+    case Key::X:
+        SaveAsPPM();
         break;
     case Key::Num1:
         _draw_type = DrawingType::None;
