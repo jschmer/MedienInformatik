@@ -37,8 +37,8 @@ protected:
     // event handler
 protected:
     virtual void OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) override;
-    virtual void OnMouseButtonPressed(sf::Mouse::Button button, int x, int y);
-    virtual void OnMouseButtonReleased(sf::Mouse::Button button, int x, int y);
+    virtual void OnMouseButtonPressed(sf::Mouse::Button button, int x, int y) override;
+    virtual void OnMouseButtonReleased(sf::Mouse::Button button, int x, int y) override;
 
     //
     // drawing helper
