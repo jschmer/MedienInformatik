@@ -1,6 +1,5 @@
 # VS specifics
 *.suo
-*.user
 
 /MSVC/*/lib
 bin
