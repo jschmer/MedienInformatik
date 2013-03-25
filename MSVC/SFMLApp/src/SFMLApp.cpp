@@ -288,6 +288,10 @@ void SFMLApp::OnResized(uint width, uint height) {
     _view.setSize(static_cast<float>(width), static_cast<float>(height));
     _view.setCenter(sf::Vector2f(width/2.f, height/2.f));
     _window.setView(_view);
+
+    // updating member vars
+    _width  = width;
+    _height = height;
 }
 
 void SFMLApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) {

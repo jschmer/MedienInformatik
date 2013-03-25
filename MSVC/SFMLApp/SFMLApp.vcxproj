@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{EC3292D5-16B0-49C9-991C-6B2FD0A17BBD}</ProjectGuid>
+    <ProjectGuid>{FF6E641A-A83C-4376-B70C-9C0B80042E42}</ProjectGuid>
     <RootNamespace>SFMLApp</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
