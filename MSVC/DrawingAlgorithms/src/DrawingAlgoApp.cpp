@@ -26,27 +26,16 @@ DrawingAlgoApp::Pixel::Pixel(uint hex) {
 }
 
 //
-// Point struct definition
-DrawingAlgoApp::Point::Point()
-    : x(0U), y(0U)
-{}
-
-DrawingAlgoApp::Point::Point(uint x, uint y)
-    : x(x), y(y)
-{}
-
-//
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
-    : SFMLApp(800u, 600u, "Drawing Algorithms", sf::Style::Default),
+    : Super(800u, 600u, "Drawing Algorithms", sf::Style::Default),
     _num_pixels(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0)
 {
     _pixel_data.reset(new Pixel[_width*_height]);
 
-    // clear pixel data
-    memset(_pixel_data.get(), 0, sizeof(Pixel)*_width*_height);
+    clearPixelData();
 }
 
 DrawingAlgoApp::~DrawingAlgoApp()
@@ -99,6 +88,10 @@ void DrawingAlgoApp::setPixel(uint x, uint y, Pixel &pix) {
 
     auto size = sizeof(pix);
     memcpy(&_pixel_data[idx], &pix, size);
+}
+
+void DrawingAlgoApp::clearPixelData() {
+    memset(_pixel_data.get(), 0, sizeof(Pixel)*_width*_height);
 }
 
 void DrawingAlgoApp::RenderPixelArray() {
@@ -220,10 +213,57 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius) {
     }
 }
 
-void DrawingAlgoApp::DrawBezier(std::vector<Point> support_points) {
+void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
+    const auto size = support_points.size();
+    
     // TODO: rasterize curve
+    std::vector<Point2D> points;
 
-    // and render it
+    if (size < 2U)
+        return;
+
+    std::unique_ptr<std::unique_ptr<Point2D[]>[]> b(new std::unique_ptr<Point2D[]>[size]);
+    for (auto i = 0U; i < size; ++i)
+        b[i].reset(new Point2D[size]);
+
+    for (float t = .0f; t <= 1.f; t += .05f) {
+        // de Casteljau algorithm
+        // for i = 0 .. n
+        for (auto i = 0u; i < size; ++i) {
+            //    b(i,0) = bi
+            b[i][0] = support_points[i];
+        }
+
+        // for j = 1 .. n
+        for (auto j = 1u; j < size; ++j) {
+            // for i = j .. n
+            for (auto i = j; i < size; ++i) { 
+                // b(i,j) = (1-t) * b(i-1,j-1) + t * b(i,j-1)
+                b[i][j] = (1.f - t) * b[i-1][j-1] + t * b[i][j-1];
+            }
+        }
+
+        // p(t) = b(n,n)
+        points.push_back(b[size-1][size-1]);
+    }
+    points.push_back(support_points.back());
+
+    // render support points
+    for (auto& p: support_points) {
+        DrawCircle(p.x, p.y, 1);
+    }
+
+    // render curve
+    auto p0 = *points.cbegin();
+    
+    for(auto it = points.cbegin() + 1; it != points.cend(); ++it) {
+        auto& p1 = *it;
+
+        DrawLineBresenham(p0.x, p0.y, p1.x, p1.y);
+
+        p0 = p1;
+    }
+    
 }
 
 //
@@ -236,8 +276,7 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
 
     switch (key) {
     case Key::C:
-        // clear pixel data
-        memset(_pixel_data.get(), 0, _width*_height*sizeof(Pixel));
+        clearPixelData();
         
         // clear bezier points
         _bezier_points.clear();
@@ -282,7 +321,13 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
         break;
     case DrawingType::Bezier:
         // add point to support_points!
-        _bezier_points.push_back(Point(cachex, cachey));
+        _bezier_points.push_back(Point2D(cachex, cachey));
+
+        // clear pixeldata
+        clearPixelData();
+
+        // render bezier
+        DrawBezier(_bezier_points);
         break;
     }
 }

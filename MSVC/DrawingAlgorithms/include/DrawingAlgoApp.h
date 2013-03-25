@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <Point2D.h>
+
 class DrawingAlgoApp : public SFMLApp {
     typedef SFMLApp Super;
     typedef unsigned char BYTE;
@@ -14,13 +16,6 @@ class DrawingAlgoApp : public SFMLApp {
         Pixel();
         Pixel(uint R, uint G, uint B);
         Pixel(uint hex); // 0xRRGGBB
-    };
-
-    struct Point {
-        uint x, y;
-
-        Point();
-        Point(uint x, uint y);
     };
 
     enum class DrawingType {
@@ -53,6 +48,7 @@ protected:
 private:
     void RenderPixelArray();
     void setPixel(uint x, uint y, Pixel &pix);
+    void clearPixelData();
 
     //
     // drawing algorithms
@@ -60,12 +56,12 @@ private:
     void DrawLineBresenham(uint x1, uint y1, uint x2, uint y2);
     void DrawLineMidpoint (uint x1, uint y1, uint x2, uint y2);
     void DrawCircle(uint posx, uint posy, uint radius);
-    void DrawBezier(std::vector<Point> support_points);
+    void DrawBezier(const std::vector<Point2D>& support_points);
 
     //
     // data
 private:
-    std::vector<Point> _bezier_points;
+    std::vector<Point2D> _bezier_points;
 
     sf::Vector2i _mouse_pos_cache;
     DrawingType  _draw_type;

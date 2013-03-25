@@ -21,9 +21,15 @@
     <ClCompile Include="src\DrawingAlgoApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Point2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\DrawingAlgoApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Point2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
