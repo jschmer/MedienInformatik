@@ -60,8 +60,9 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\SFMLApp\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SFMLApp-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
@@ -86,8 +87,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\SFMLApp\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SFMLApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
     </Link>
@@ -106,6 +108,11 @@
   <ItemGroup>
     <ClInclude Include="include\Point2D.h" />
     <ClInclude Include="include\DrawingAlgoApp.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SFMLApp\SFMLApp.vcxproj">
+      <Project>{ff6e641a-a83c-4376-b70c-9c0b80042e42}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
