@@ -2,6 +2,8 @@
 
 Attention: Uses new features of C++11! See [README](https://github.com/jschmer/MedienInformatik) for details.
 
+You need to build 'SFMLApp' before building this project!
+
 ### Supports
 * Bresenham
 * Midpoint
