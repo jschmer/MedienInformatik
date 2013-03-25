@@ -47,15 +47,15 @@ protected:
     // drawing helper
 private:
     void RenderPixelArray();
-    void setPixel(uint x, uint y, Pixel &pix);
-    void clearPixelData();
+    void SetPixel(uint x, uint y, const Pixel &pix);
+    void ClearPixelData();
 
     //
     // drawing algorithms
 private:
-    void DrawLineBresenham(uint x1, uint y1, uint x2, uint y2);
-    void DrawLineMidpoint (uint x1, uint y1, uint x2, uint y2);
-    void DrawCircle(uint posx, uint posy, uint radius);
+    void DrawLineBresenham(uint x1, uint y1, uint x2, uint y2, const Pixel& pix = Pixel(0, 255, 0));
+    void DrawLineMidpoint (uint x1, uint y1, uint x2, uint y2, const Pixel& pix = Pixel(0, 255, 0));
+    void DrawCircle(uint posx, uint posy, uint radius, const Pixel& pix = Pixel(0, 255, 0));
     void DrawBezier(const std::vector<Point2D>& support_points);
 
     //

@@ -35,7 +35,7 @@ DrawingAlgoApp::DrawingAlgoApp()
 {
     _pixel_data.reset(new Pixel[_width*_height]);
 
-    clearPixelData();
+    ClearPixelData();
 }
 
 DrawingAlgoApp::~DrawingAlgoApp()
@@ -79,7 +79,7 @@ void DrawingAlgoApp::OnRender() {
 
 //
 // drawing helper
-void DrawingAlgoApp::setPixel(uint x, uint y, Pixel &pix) {
+void DrawingAlgoApp::SetPixel(uint x, uint y, const Pixel &pix) {
     if (x >= _width || y >= _height)
         return;
 
@@ -90,7 +90,7 @@ void DrawingAlgoApp::setPixel(uint x, uint y, Pixel &pix) {
     memcpy(&_pixel_data[idx], &pix, size);
 }
 
-void DrawingAlgoApp::clearPixelData() {
+void DrawingAlgoApp::ClearPixelData() {
     memset(_pixel_data.get(), 0, sizeof(Pixel)*_width*_height);
 }
 
@@ -104,9 +104,7 @@ void DrawingAlgoApp::RenderPixelArray() {
 
 //
 // drawing algorithms
-void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2) {
-    Pixel pix(0, 255, 0);
-
+void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2, const Pixel& pix) {
     // Startpunkt
     int x = x1, y = y1;
 
@@ -142,7 +140,7 @@ void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2) {
     int error = errLR - num_elements;
 
     for (int i = 0; i < num_elements; ++i) {
-        setPixel(x, y, pix);
+        SetPixel(x, y, pix);
         
         // Fehlervariable aktualisieren (Schritt in schneller Richtung)
         error += errLR;
@@ -162,9 +160,7 @@ void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2) {
     }
 }
 
-void DrawingAlgoApp::DrawLineMidpoint(uint x1, uint y1, uint x2, uint y2) {
-    Pixel pix(0, 255, 0);
-
+void DrawingAlgoApp::DrawLineMidpoint(uint x1, uint y1, uint x2, uint y2, const Pixel& pix) {
     int x = x1;
     int y = y1;
     int dx = x2 - x1;
@@ -173,7 +169,7 @@ void DrawingAlgoApp::DrawLineMidpoint(uint x1, uint y1, uint x2, uint y2) {
 
     // immer Schritt in schnelle Richtung, gelegentlich in langsame Richtung
     for (int i = 1; i <= dx; ++i) { 
-        setPixel(x, y, pix);
+        SetPixel(x, y, pix);
         x++;
         if (f > 0) { 
             y += 1;
@@ -182,9 +178,7 @@ void DrawingAlgoApp::DrawLineMidpoint(uint x1, uint y1, uint x2, uint y2) {
     }
 }
 
-void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius) {
-    Pixel pix(0, 255, 0);
-
+void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius, const Pixel& pix) {
     int x1 = 0;
     int y1 = radius;
     int f  = 1 - radius;
@@ -193,14 +187,14 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius) {
 
     while(x1 <= y1) {
         // drawing each possible arc
-        setPixel(posx+x1, posy-y1, pix);
-        setPixel(posx+x1, posy+y1, pix);
-        setPixel(posx-x1, posy-y1, pix);
-        setPixel(posx-x1, posy+y1, pix);
-        setPixel(posx+y1, posy-x1, pix);
-        setPixel(posx+y1, posy+x1, pix);
-        setPixel(posx-y1, posy-x1, pix);
-        setPixel(posx-y1, posy+x1, pix);
+        SetPixel(posx+x1, posy-y1, pix);
+        SetPixel(posx+x1, posy+y1, pix);
+        SetPixel(posx-x1, posy-y1, pix);
+        SetPixel(posx-x1, posy+y1, pix);
+        SetPixel(posx+y1, posy-x1, pix);
+        SetPixel(posx+y1, posy+x1, pix);
+        SetPixel(posx-y1, posy-x1, pix);
+        SetPixel(posx-y1, posy+x1, pix);
 
         x1++;
         if(f > 0) {
@@ -214,6 +208,7 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius) {
 }
 
 void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
+    const auto t_stepsize = .01f;
     const auto size = support_points.size();
     
     // TODO: rasterize curve
@@ -226,7 +221,7 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
     for (auto i = 0U; i < size; ++i)
         b[i].reset(new Point2D[size]);
 
-    for (float t = .0f; t <= 1.f; t += .05f) {
+    for (float t = .0f; t <= 1.f; t += t_stepsize) {
         // de Casteljau algorithm
         // for i = 0 .. n
         for (auto i = 0u; i < size; ++i) {
@@ -246,20 +241,21 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
         // p(t) = b(n,n)
         points.push_back(b[size-1][size-1]);
     }
-    points.push_back(support_points.back());
 
-    // render support points
+    // render support points in red
     for (auto& p: support_points) {
-        DrawCircle(p.x, p.y, 1);
+        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
     }
 
     // render curve
     auto p0 = *points.cbegin();
-    
-    for(auto it = points.cbegin() + 1; it != points.cend(); ++it) {
+    for (auto it = points.cbegin() + 1; it != points.cend(); ++it) {
         auto& p1 = *it;
 
-        DrawLineBresenham(p0.x, p0.y, p1.x, p1.y);
+        DrawLineBresenham(static_cast<uint>(p0.x),
+                          static_cast<uint>(p0.y),
+                          static_cast<uint>(p1.x),
+                          static_cast<uint>(p1.y));
 
         p0 = p1;
     }
@@ -276,7 +272,7 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
 
     switch (key) {
     case Key::C:
-        clearPixelData();
+        ClearPixelData();
         
         // clear bezier points
         _bezier_points.clear();
@@ -324,7 +320,7 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
         _bezier_points.push_back(Point2D(cachex, cachey));
 
         // clear pixeldata
-        clearPixelData();
+        ClearPixelData();
 
         // render bezier
         DrawBezier(_bezier_points);
