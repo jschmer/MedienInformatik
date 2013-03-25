@@ -26,6 +26,16 @@ DrawingAlgoApp::Pixel::Pixel(uint hex) {
 }
 
 //
+// Point struct definition
+DrawingAlgoApp::Point::Point()
+    : x(0U), y(0U)
+{}
+
+DrawingAlgoApp::Point::Point(uint x, uint y)
+    : x(x), y(y)
+{}
+
+//
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
     : SFMLApp(800u, 600u, "Drawing Algorithms", sf::Style::Default),
@@ -51,9 +61,11 @@ bool DrawingAlgoApp::OnInit() {
     // adjusting help text
     const auto append_text = R"(
 C = Clear Pixelbuffer
-1 = Mode None
-2 = Mode Line
-3 = Mode Circle
+Modes:
+1 = None
+2 = Line
+3 = Circle
+4 = Bezier
 )";
 
     auto help = _help_text.getString();
@@ -208,6 +220,12 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius) {
     }
 }
 
+void DrawingAlgoApp::DrawBezier(std::vector<Point> support_points) {
+    // TODO: rasterize curve
+
+    // and render it
+}
+
 //
 // event handler
 void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) {
@@ -220,6 +238,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
     case Key::C:
         // clear pixel data
         memset(_pixel_data.get(), 0, _width*_height*sizeof(Pixel));
+        
+        // clear bezier points
+        _bezier_points.clear();
         break;
     case Key::Num1:
         _draw_type = DrawingType::None;
@@ -229,6 +250,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         break;
     case Key::Num3:
         _draw_type = DrawingType::Circle;
+        break;
+    case Key::Num4:
+        _draw_type = DrawingType::Bezier;
         break;
     }
 }
@@ -241,18 +265,24 @@ void DrawingAlgoApp::OnMouseButtonPressed(sf::Mouse::Button button, int x, int y
 void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int y) {
     auto& cachex = _mouse_pos_cache.x;
     auto& cachey = _mouse_pos_cache.y;
-    
+
     switch (_draw_type) {
     case DrawingType::Line:
         DrawLineBresenham(cachex, cachey, x, y);
         break;
     case DrawingType::Circle:
-        // calc distance between cache and current point
-        auto dx = cachex - x;
-        auto dy = cachey - y;
-        auto radius = std::sqrt(dx*dx + dy*dy);
+        {
+            // calc distance between cache and current point
+            auto dx = cachex - x;
+            auto dy = cachey - y;
+            auto radius = std::sqrt(dx*dx + dy*dy);
 
-        DrawCircle(cachex, cachey, static_cast<int>(radius));
+            DrawCircle(cachex, cachey, static_cast<int>(radius));
+        }
+        break;
+    case DrawingType::Bezier:
+        // add point to support_points!
+        _bezier_points.push_back(Point(cachex, cachey));
         break;
     }
 }

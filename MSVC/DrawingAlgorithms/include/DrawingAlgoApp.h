@@ -16,10 +16,18 @@ class DrawingAlgoApp : public SFMLApp {
         Pixel(uint hex); // 0xRRGGBB
     };
 
+    struct Point {
+        uint x, y;
+
+        Point();
+        Point(uint x, uint y);
+    };
+
     enum class DrawingType {
         None,
         Line,
-        Circle
+        Circle,
+        Bezier
     };
 
     // DrawingAlgoApp declaration
@@ -52,10 +60,13 @@ private:
     void DrawLineBresenham(uint x1, uint y1, uint x2, uint y2);
     void DrawLineMidpoint (uint x1, uint y1, uint x2, uint y2);
     void DrawCircle(uint posx, uint posy, uint radius);
+    void DrawBezier(std::vector<Point> support_points);
 
     //
     // data
 private:
+    std::vector<Point> _bezier_points;
+
     sf::Vector2i _mouse_pos_cache;
     DrawingType  _draw_type;
     const uint   _num_pixels;
