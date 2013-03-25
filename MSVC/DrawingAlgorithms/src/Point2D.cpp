@@ -8,8 +8,12 @@ Point2D::Point2D()
     : x(0U), y(0U)
 {}
 
-Point2D::Point2D(uint x, uint y)
+Point2D::Point2D(const float x, const float y)
     : x(x), y(y)
+{}
+
+Point2D::Point2D(const int x, const int y)
+    : x(static_cast<float>(x)), y(static_cast<float>(y))
 {}
 
 //
@@ -34,8 +38,8 @@ const Point2D operator+(const Point2D& lhs, const Point2D& rhs)
 // Point2D member operators
 Point2D& Point2D::operator*=(float const& factor)
 {
-  x = static_cast<uint>(std::floor(x * factor));
-  y = static_cast<uint>(std::floor(y * factor));
+  x *= factor;
+  y *= factor;
   return *this;
 }
 

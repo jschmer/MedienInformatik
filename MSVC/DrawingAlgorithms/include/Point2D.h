@@ -1,10 +1,9 @@
-typedef unsigned int uint;
-
 struct Point2D {
-    uint x, y;
+    float x, y;
 
     Point2D();
-    Point2D(uint x, uint y);
+    Point2D(const float x, const float y);
+    Point2D(const int x, const int y);
     Point2D& operator*=(const float& factor);
     Point2D& operator+=(const Point2D& rhs);
 };
