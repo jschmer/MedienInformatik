@@ -145,12 +145,12 @@ void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2, const
     int dx = x2 - x1;
     int dy = y2 - y1;
 
-    // Schrittrichtung für Diagonalschritt ermitteln (sgn liefert -1, 0, 1)
+    // Schrittrichtung fÃ¼r Diagonalschritt ermitteln (sgn liefert -1, 0, 1)
     int diagonal_dx = sgn(dx);
     int diagonal_dy = sgn(dy);
 
     int errSR, errLR;               // Fehleranpassung in schneller Richtung (SR) und langsamer Richtung (LR)
-    int parallel_dx, parallel_dy;   // Schrittweite für Parallelschritt 
+    int parallel_dx, parallel_dy;   // Schrittweite fÃ¼r Parallelschritt 
     int num_elements;               // Anzahl zu zeichnender Pixel
 
     // Unterscheidung zwischen schneller und langsamer Richtung
