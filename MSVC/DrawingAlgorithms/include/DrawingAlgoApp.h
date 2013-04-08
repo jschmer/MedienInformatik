@@ -22,7 +22,8 @@ class DrawingAlgoApp : public SFMLApp {
         None,
         Line,
         Circle,
-        Bezier
+        Bezier,
+        BSpline
     };
 
     // DrawingAlgoApp declaration
@@ -59,11 +60,15 @@ private:
     void DrawLineMidpoint (uint x1, uint y1, uint x2, uint y2, const Pixel& pix = Pixel(0, 255, 0));
     void DrawCircle(uint posx, uint posy, uint radius, const Pixel& pix = Pixel(0, 255, 0));
     void DrawBezier(const std::vector<Point2D>& support_points);
+    void DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> _knot_vector);
 
     //
     // data
 private:
     std::vector<Point2D> _bezier_points;
+
+    std::vector<Point2D> _bspline_points;
+    std::vector<float>   _bspline_knot_vector;
 
     sf::Vector2i _mouse_pos_cache;
     DrawingType  _draw_type;

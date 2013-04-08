@@ -37,6 +37,19 @@ DrawingAlgoApp::DrawingAlgoApp()
 {
     _pixel_data.reset(new Pixel[_width*_height]);
 
+    _bspline_knot_vector.push_back(0);
+    _bspline_knot_vector.push_back(0);
+    _bspline_knot_vector.push_back(0);
+    _bspline_knot_vector.push_back(0);
+
+    _bspline_knot_vector.push_back(.49f);
+    _bspline_knot_vector.push_back(.75f);
+
+    _bspline_knot_vector.push_back(1);
+    _bspline_knot_vector.push_back(1);
+    _bspline_knot_vector.push_back(1);
+    _bspline_knot_vector.push_back(1);
+
     ClearPixelData();
 }
 
@@ -53,11 +66,13 @@ bool DrawingAlgoApp::OnInit() {
     const auto append_text = R"(
 C = Clear Pixelbuffer
 X = Capture Screen
+
 Modes:
 1 = None
 2 = Line
 3 = Circle
 4 = Bezier
+5 = B-Spline
 )";
 
     auto help = _help_text.getString();
@@ -244,16 +259,12 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius, const Pixel& 
 void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
     const auto t_stepsize = .01f;
     const auto size = support_points.size();
-    
-    // TODO: rasterize curve
-    std::vector<Point2D> points;
 
     if (size < 2U)
         return;
 
-    std::unique_ptr<std::unique_ptr<Point2D[]>[]> b(new std::unique_ptr<Point2D[]>[size]);
-    for (auto i = 0U; i < size; ++i)
-        b[i].reset(new Point2D[size]);
+    std::vector<Point2D> points;
+    std::vector<std::vector<Point2D>> b(size, std::vector<Point2D>(size));
 
     for (float t = .0f; t <= 1.f; t += t_stepsize) {
         // de Casteljau algorithm
@@ -293,8 +304,82 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
 
         p0 = p1;
     }
-    
 }
+
+void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> knot_vector) {
+    const auto t_stepsize = .005f;
+    const auto support_points_size = support_points.size(); // m
+    const auto polynom_degree = 3; // n
+
+    // knot_vector content:
+    // n + 1   0en
+    // n + 1   1en
+    // rest: frei wählbar
+
+    // größe: n + 1 + m
+
+    if (support_points_size != 6U)
+        return;
+
+    std::vector<std::vector<Point2D>> b(support_points_size, std::vector<Point2D>(polynom_degree + 1));
+    std::vector<Point2D> points;
+    
+    // m = Anzahl Stützpunkte
+    // n = Polynomgrad (ersten n und letzten n Elemente des Knotenvektors sind gleich)
+
+    const auto& n = polynom_degree;
+
+    for (float t = .0f; t <= 1.f; t += t_stepsize) {
+        // Berechne i so, dass t_i ≤ t < t_i+1, 0 ≤ i ≤ m 
+        const int i = [&](float t) {
+            int i = 0;
+            while (i < support_points_size && knot_vector[i] <= t)
+                ++i;
+            return --i;
+        }(t);
+
+        // for j = 0 .. n 
+        for (int j = 0; j <= n; ++j) {
+        //  for l = i-n+j .. i
+            for (int l = i - n + j; l <= i; ++l) {
+        //      if j = 0
+                if (j == 0) {
+        //          b(l,0) = b_l
+                    b[l][0] = support_points[l];
+                }
+        //      else 
+                else {
+        //          t’ = (t – t_l) / (t_l+n+1-j – t_l)
+                    auto _t = (t - knot_vector[l]) / (knot_vector[l+n+1-j] - knot_vector[l]);
+        //          b(l,j) = (1 – t’) * b(l-1,j-1) + t’ * b(l,j-1)
+                    b[l][j] = (1 - _t) * b[l-1][j-1] + _t * b[l][j-1];
+                }
+            }
+        }
+        // p(t) = b(i,n)
+        points.push_back(b[i][n]);
+    }
+
+    // render support points in red
+    for (auto& p: support_points) {
+        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
+    }
+
+    // render curve
+    auto p0 = *points.cbegin();
+    for (auto it = points.cbegin() + 1; it != points.cend(); ++it) {
+        auto& p1 = *it;
+
+        DrawLineBresenham(static_cast<uint>(p0.x),
+                          static_cast<uint>(p0.y),
+                          static_cast<uint>(p1.x),
+                          static_cast<uint>(p1.y),
+                          Pixel(0xFFFF00));
+
+        p0 = p1;
+    }
+}
+
 
 //
 // event handler
@@ -308,8 +393,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
     case Key::C:
         ClearPixelData();
         
-        // clear bezier points
+        // clear support points
         _bezier_points.clear();
+        _bspline_points.clear();
         break;
     case Key::X:
         SaveAsPPM();
@@ -325,6 +411,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         break;
     case Key::Num4:
         _draw_type = DrawingType::Bezier;
+        break;
+    case Key::Num5:
+        _draw_type = DrawingType::BSpline;
         break;
     }
 }
@@ -361,6 +450,16 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
 
         // render bezier
         DrawBezier(_bezier_points);
+        break;
+    case DrawingType::BSpline:
+        // add point to support_points!
+        _bspline_points.push_back(Point2D(cachex, cachey));
+
+        // clear pixeldata
+        ClearPixelData();
+
+        // render bezier
+        DrawBSpline(_bspline_points, _bspline_knot_vector);
         break;
     }
 }
