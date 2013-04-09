@@ -5,6 +5,7 @@
 
 #include <String/ConvertHelper.h>
 #include <string>
+#include <memory>
 
 using std::string;
 
@@ -15,8 +16,10 @@ using std::string;
  */
 class AppConfig {
 public:
-	AppConfig(ConfigFile *configFile);
-	~AppConfig();
+	AppConfig(ConfigFile *configFile)
+        : configFile(configFile) 
+    {}
+    ~AppConfig() {}
 
 	/**
 	 * @fn			AppConfig::write(string key, InputType value)
@@ -59,7 +62,7 @@ public:
 	}
 
 private:
-	ConfigFile *configFile;
+	std::unique_ptr<ConfigFile> configFile;
 };
 
 #endif

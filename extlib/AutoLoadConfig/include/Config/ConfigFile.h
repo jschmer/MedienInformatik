@@ -3,11 +3,13 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <vector>
 #include <functional>
 #include <windows.h>
 #include <iostream>
 #include <thread>
+#include <mutex>
 #include <FileWatcher/FileWatcher.h>
 
 using std::string;
@@ -52,12 +54,17 @@ class ConfigFile {
 	string pathToConfigFile_;
 	string configFileName_;
 
-    std::map   <string, string>       content_;
-    std::vector<string>               sections_;
+    // data
+    std::map<string, string>          content_;
+    std::set<string>                  sections_;
+
+    // callback on file update
 	std::function<void (ConfigFile&)> callback_;
+    bool do_callback_;
 
 	// for monitoring thread
     std::thread monitorThread;
+    std::mutex mtx;
     bool stopMonitor;
 	FW::FileWatcher fileWatcher;
 
@@ -65,13 +72,16 @@ public:
 	ConfigFile(string const& configFile, char const delim = '=');
 	~ConfigFile();
 
-	// logical I/O operation
+    // logical I/O operation
 	string get(string section, string key);
 	string get(string section, string key, string def);
+    void put(string section, string key, string value);
 
 	// stuff
 	string getPath();
-    std::vector<string> GetSections();
+    std::set<string> GetSections();
+    void disableCallback() { do_callback_ = false; }
+    void enableCallback() { do_callback_ = true; }
 
 	// callback stuff
 	void setCallbackOnUpdate(std::function<void (ConfigFile&)> callback) {
@@ -87,7 +97,8 @@ private:
 
 	// callback stuff
 	void runCallback() {
-		callback_(*this);
+        if (do_callback_)
+		    callback_(*this);
 	}
 };
 

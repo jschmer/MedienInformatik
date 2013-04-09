@@ -13,7 +13,9 @@
 ConfigFile::ConfigFile(std::string const& configFile, char const delim)
 	:	delimiter_(delim),
 		stopMonitor(false),
-        monitorThread()
+        monitorThread(),
+        do_callback_(false),
+        mtx()
 {
 	// get current working dir
 	char cCurrentPath[FILENAME_MAX];
@@ -43,10 +45,12 @@ ConfigFile::ConfigFile(std::string const& configFile, char const delim)
 
 ConfigFile::~ConfigFile() {
 	stopMonitor = true;
-    monitorThread.join();
+    if (monitorThread.joinable())
+        monitorThread.join();
 }
 
 void ConfigFile::readConfig() {
+    std::lock_guard<std::mutex> guard(mtx);
 	using StringHelper::trim;
 
 	std::ifstream file(pathToConfigFile_ + configFileName_);
@@ -56,18 +60,110 @@ void ConfigFile::readConfig() {
 		if (!line.length()) continue;
 		if (line[0] == '#') continue;
 		if (line[0] == ';') continue;
+
+        // handle section header
 		if (line[0] == '[') {
 			inSection = trim(line.substr(1, line.find(']')-1));
-			sections_.push_back(inSection);
+			sections_.insert(inSection);
 			continue;
 		}
 
+        // split key/value pair
 		int posEqual = line.find('=');
 		std::string name  = trim(line.substr(0, posEqual));
 		std::string value = trim(line.substr(posEqual+1));
 
+        // add to internal representation
 		content_[inSection+'/'+name] = value;
 	}
+}
+
+void ConfigFile::writeConfig() {
+    std::lock_guard<std::mutex> guard(mtx);
+	using StringHelper::trim;
+    do_callback_ = false;
+
+	std::ifstream file(pathToConfigFile_ + configFileName_);
+
+    auto content_copy = content_;
+
+	std::string inSection, line, lineoutput;
+	while (std::getline(file,line)) {
+		if (!line.length()) {
+            lineoutput += "\n";
+            continue;
+        }
+		if (line[0] == '#') {
+            lineoutput += line + "\n";
+            continue;
+        }
+		if (line[0] == ';') {
+            lineoutput += line + "\n";
+            continue;
+        }
+		if (line[0] == '[') {
+            lineoutput += line + "\n";
+			inSection = trim(line.substr(1, line.find(']')-1));
+			continue;
+		}
+
+		int posEqual = line.find(delimiter_);
+		std::string name  = trim(line.substr(0, posEqual));
+		std::string value = trim(line.substr(posEqual+1));
+
+        auto internal_value = get(inSection, name, "not_in_map");
+
+        // if internal_value differs from value in config: replace it!
+        if (value != internal_value) {
+            auto pos = line.find(value);
+            if (pos != string::npos) {
+                line = line.replace(pos, value.length(), internal_value);
+            }
+        }
+
+        content_copy.erase(inSection + "/" + name);
+        lineoutput += line + "\n";
+	}
+
+    // insert all data that is left over
+    for (const auto& pair : content_copy) {
+        auto key = pair.first;
+        auto val = pair.second;
+
+        // get section and name
+        auto split = StringHelper::split(key, '/');
+
+        auto section = split[0];
+        auto name = split[1];
+        auto name_value = name + " " + delimiter_ + " " + val;
+
+        if (section == "") {
+            // prepend new name/value pair
+            lineoutput = name_value + "\n" + lineoutput;
+        }
+        else {
+            // find section begin
+            auto pos = lineoutput.find(section);
+            if (pos != std::string::npos) {
+                // section already exist, append new name/value pair
+                pos += section.size() + 2; // jumping over newline...
+                lineoutput.insert(pos, name_value + "\n");
+            }
+            else {
+                // section does not exist, append new section and name/value pair
+                lineoutput += "\n[" + section + "]\n" + name_value + "\n";
+            }
+        }
+    }
+
+    file.close();
+
+    // write buffer
+    std::ofstream ofile(pathToConfigFile_ + configFileName_, std::ofstream::trunc);
+    ofile << lineoutput;
+    ofile.close();
+
+    do_callback_ = true;
 }
 
 string ConfigFile::get(string section, string key) {
@@ -83,15 +179,24 @@ string ConfigFile::get(string section, string key, string def) {
 	try {
 		return get(section, key);
 	} catch(std::out_of_range) {
-		return content_.insert(std::make_pair(section+'/'+key, def)).first->second;
+        // key does not exist, insert default value
+        put(section, key, def);
+		return def;
 	}
+}
+
+void ConfigFile::put(string section, string key, string value) {
+    sections_.insert(section);
+    content_[section+'/'+key] = value;
+
+    writeConfig();
 }
 
 string ConfigFile::getPath() {
 	return pathToConfigFile_ + configFileName_;
 }
 
-std::vector<std::string> ConfigFile::GetSections() {
+std::set<std::string> ConfigFile::GetSections() {
 	return sections_;
 }
 
