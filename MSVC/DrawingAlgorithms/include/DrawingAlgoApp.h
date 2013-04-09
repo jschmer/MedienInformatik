@@ -48,7 +48,7 @@ protected:
     //
     // Config loader helper
 private:
-    void loadConfigData();
+    void updateConfigData();
 
     //
     // drawing helper

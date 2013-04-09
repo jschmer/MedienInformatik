@@ -4,12 +4,28 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <string>
+using std::string;
+using std::ostringstream;
 
 #include <SFML/OpenGL.hpp>
 
 // signum function
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
+}
+
+// join
+template <typename T>
+string join(const T& v, const string& delim) {
+    ostringstream s;
+    for (const auto& i : v) {
+        if (&i != &v[0]) {
+            s << delim;
+        }
+        s << i;
+    }
+    return s.str();
 }
 
 //
@@ -35,33 +51,18 @@ DrawingAlgoApp::DrawingAlgoApp()
     _num_pixels(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
-    _delta_t(.01f),
     _config("DrawingAlgoApp.cfg")
 {
     _pixel_data.reset(new Pixel[_width*_height]);
 
-    // B-Spline settings
-    _bspline_knot_vector.push_back(0);
-    _bspline_knot_vector.push_back(0);
-    _bspline_knot_vector.push_back(0);
-    _bspline_knot_vector.push_back(0);
-
-    _bspline_knot_vector.push_back(.49f);
-    _bspline_knot_vector.push_back(.75f);
-
-    _bspline_knot_vector.push_back(1);
-    _bspline_knot_vector.push_back(1);
-    _bspline_knot_vector.push_back(1);
-    _bspline_knot_vector.push_back(1);
-
-    _bspline_poly_degree = 3;
-
     ClearPixelData();
 
     // setup config file monitor
-    loadConfigData();
+    updateConfigData();
     _config.setCallbackOnUpdate([&](ConfigFile &cfg) {
-        loadConfigData();
+        cfg.disableCallback();
+        updateConfigData();
+        cfg.enableCallback();
 
         // redraw curves with updated values
         switch (_draw_type) {
@@ -128,32 +129,90 @@ void DrawingAlgoApp::OnRender() {
 
 //
 // Config loader helper
-void DrawingAlgoApp::loadConfigData() {
-    const std::string d_t = _config.get("", "delta_t", "0.01");
-    const std::string bspline_degree = _config.get("B-Spline", "poly_degree", "3");
-    std::string bspline_knot_vec = _config.get("B-Spline", "knot_vec", "[0, 0, 0, 0, 0.49, 0.75, 1, 1, 1, 1]");
+void DrawingAlgoApp::updateConfigData() {
+    const std::string d_t             = _config.get("General", "delta_t", "0.01");
+    const std::string bspline_degree  = _config.get("B-Spline", "poly_degree", "3");
+    const std::string num_supp_points = _config.get("B-Spline", "num_support_points", "0");
 
     try {
         _delta_t = std::stof(d_t);
-        _bspline_poly_degree = std::stoi(bspline_degree);
 
-        // processing B-Spline knot vector
-        // converting knot_vec into internal float vector
-        const std::regex r(R"<<(([0-9]+(.[0-9]+)?))<<");
-        std::smatch m;
+        auto poly_deg_tmp = std::stoi(bspline_degree);
+        auto num_supp_points_tmp = std::stoi(num_supp_points);
 
-        std::vector<float> temp;
-        while (std::regex_search(bspline_knot_vec, m, r)) {
-            std::string knot_val = m[0].str();
-            temp.push_back(stof(knot_val));
+        if (_bspline_poly_degree != poly_deg_tmp || _bspline_points.size() != num_supp_points_tmp) {
+            // TODO: recalc knot vector and print out to config file
+            auto new_knot_vec_len = _bspline_points.size() + poly_deg_tmp + 1;
+            std::string knot_vec_str = "";
 
-            // next iteration after found match
-            bspline_knot_vec = m.suffix().str();
+            if (new_knot_vec_len >= 2U * (poly_deg_tmp + 1U)) {
+                // B-Spline is possible with these parameters
+
+                // new vector
+                decltype(_bspline_knot_vector) new_knot_vec;
+
+                // populate new vector
+                for (auto i = 0; i < poly_deg_tmp + 1; ++i)
+                    new_knot_vec.push_back(0.f);
+
+                auto individual_factors = new_knot_vec_len - (poly_deg_tmp + 1) * 2;
+                auto inc = 1.f / (individual_factors + 1);
+            
+                float val = inc;
+                for (auto i = 0U; i < individual_factors; ++i, val += inc)
+                    new_knot_vec.push_back(val);
+
+                for (auto i = 0; i < poly_deg_tmp + 1; ++i)
+                    new_knot_vec.push_back(1.f);
+
+                // TODO: write new knot vector to config file
+                knot_vec_str = "[" + join(new_knot_vec, ", ") + "]";
+
+                // update internal poly degree
+                _bspline_poly_degree = poly_deg_tmp;
+                // and knot vector
+                _bspline_knot_vector = new_knot_vec;
+            }
+            else {
+                // B-Spline not possible with this configuration
+
+                auto supp_points = _bspline_points.size();
+                // print "not possible with # support points"
+                // to knot_vec config property
+
+                knot_vec_str = "not possible with " + std::to_string(supp_points) + " support points";
+            }
+
+            _bspline_poly_degree = poly_deg_tmp;
+            _config.put("B-Spline", "num_support_points", std::to_string(_bspline_points.size()));
+            _config.put("B-Spline", "knot_vec", knot_vec_str);
         }
+        else {
+            // load updated knot_vector
+            std::string bspline_knot_vec = _config.get("B-Spline", "knot_vec", "[0, 0, 0, 0, 0.49, 0.75, 1, 1, 1, 1]");
 
-        _bspline_knot_vector = temp;
+            // processing B-Spline knot vector
+            // converting knot_vec into internal float vector
+            const std::regex r(R"<<(([0-9]+(.[0-9]+)?))<<");
+            std::smatch m;
+
+            std::vector<float> temp;
+            while (std::regex_search(bspline_knot_vec, m, r)) {
+                std::string knot_val = m[0].str();
+                temp.push_back(stof(knot_val));
+
+                // next iteration after found match
+                bspline_knot_vec = m.suffix().str();
+            }
+
+            // assign new vector
+            _bspline_knot_vector = temp;
+        }
+        
     }
-    catch (std::exception) {}
+    catch (std::exception) {
+        // don't let exceptions bubble up, failed reading from config files isn't a critical error
+    }
 }
 
 //
@@ -367,7 +426,7 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
 }
 
 void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> knot_vector) {
-    const auto support_points_size = support_points.size(); // m
+    const auto support_points_size = support_points.size(); // p
     const auto& polynom_degree = _bspline_poly_degree; // n
 
     // knot_vector content:
@@ -375,32 +434,27 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     // n + 1   1en
     // rest: frei wählbar
 
-    // größe: n + 1 + m
+    // größe: n + p + 1
 
     // render support points in red
     for (auto& p: support_points) {
         DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
     }
 
-    // B-Spline is on
-    if (support_points_size != 6U) {
-        return;
-    }
-    else if (knot_vector.size() != _bspline_poly_degree + 1 + support_points_size) {
-        ClearPixelData();
+    if (knot_vector.size() != polynom_degree + 1 + support_points_size) {
         return;
     }
 
     std::vector<std::vector<Point2D>> b(support_points_size, std::vector<Point2D>(polynom_degree + 1));
     std::vector<Point2D> points;
     
-    // m = Anzahl Stützpunkte
-    // n = Polynomgrad (ersten n und letzten n Elemente des Knotenvektors sind gleich)
+    // p = Anzahl Stützpunkte
+    // n = Polynomgrad
 
     const auto& n = polynom_degree;
 
     for (float t = .0f; t <= 1.f + _delta_t/2.f; t += _delta_t) {
-        // Berechne i so, dass t_i ≤ t < t_i+1, 0 ≤ i ≤ m 
+        // Berechne i so, dass t_i ≤ t < t_i+1, 0 ≤ i ≤ p
         const int i = [&](float t) {
             int i = 0;
             while (i < support_points_size && knot_vector[i] <= t)
@@ -519,6 +573,7 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
     case DrawingType::BSpline:
         // add point to support_points!
         _bspline_points.push_back(Point2D(cachex, cachey));
+        updateConfigData();
 
         // clear pixeldata
         ClearPixelData();
