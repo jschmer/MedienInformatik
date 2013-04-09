@@ -377,6 +377,12 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
 
     // größe: n + 1 + m
 
+    // render support points in red
+    for (auto& p: support_points) {
+        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
+    }
+
+    // B-Spline is on
     if (support_points_size != 6U) {
         return;
     }
@@ -393,7 +399,7 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
 
     const auto& n = polynom_degree;
 
-    for (float t = .0f; t <= 1.f; t += _delta_t) {
+    for (float t = .0f; t <= 1.f + _delta_t/2.f; t += _delta_t) {
         // Berechne i so, dass t_i ≤ t < t_i+1, 0 ≤ i ≤ m 
         const int i = [&](float t) {
             int i = 0;
@@ -422,11 +428,6 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
         }
         // p(t) = b(i,n)
         points.push_back(b[i][n]);
-    }
-
-    // render support points in red
-    for (auto& p: support_points) {
-        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
     }
 
     // render curve
