@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <Point2D.h>
+#include <Config/ConfigFile.h>
 
 class DrawingAlgoApp : public SFMLApp {
     typedef SFMLApp Super;
@@ -45,6 +46,11 @@ protected:
     virtual void OnMouseButtonReleased(sf::Mouse::Button button, int x, int y) override;
 
     //
+    // Config loader helper
+private:
+    void loadConfigData();
+
+    //
     // drawing helper
 private:
     void RenderPixelArray();
@@ -69,9 +75,14 @@ private:
 
     std::vector<Point2D> _bspline_points;
     std::vector<float>   _bspline_knot_vector;
+    int                  _bspline_poly_degree;
 
     sf::Vector2i _mouse_pos_cache;
     DrawingType  _draw_type;
     const uint   _num_pixels;
     std::unique_ptr<Pixel[]> _pixel_data; // _width * _height pixels
+
+private:
+    ConfigFile _config;
+    float      _delta_t;
 };

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
+#include <regex>
 
 #include <SFML/OpenGL.hpp>
 
@@ -33,10 +34,13 @@ DrawingAlgoApp::DrawingAlgoApp()
     : Super(800u, 600u, "Drawing Algorithms", sf::Style::Close),
     _num_pixels(_width*_height),
     _draw_type(DrawingType::None),
-    _mouse_pos_cache(0, 0)
+    _mouse_pos_cache(0, 0),
+    _delta_t(.01f),
+    _config("DrawingAlgoApp.cfg")
 {
     _pixel_data.reset(new Pixel[_width*_height]);
 
+    // B-Spline settings
     _bspline_knot_vector.push_back(0);
     _bspline_knot_vector.push_back(0);
     _bspline_knot_vector.push_back(0);
@@ -50,7 +54,34 @@ DrawingAlgoApp::DrawingAlgoApp()
     _bspline_knot_vector.push_back(1);
     _bspline_knot_vector.push_back(1);
 
+    _bspline_poly_degree = 3;
+
     ClearPixelData();
+
+    // setup config file monitor
+    loadConfigData();
+    _config.setCallbackOnUpdate([&](ConfigFile &cfg) {
+        loadConfigData();
+
+        // redraw curves with updated values
+        switch (_draw_type) {
+        case DrawingType::Bezier:
+            // clear pixeldata
+            ClearPixelData();
+
+            // render bezier
+            DrawBezier(_bezier_points);
+            break;
+        case DrawingType::BSpline:
+            // clear pixeldata
+            ClearPixelData();
+
+            // render bezier
+            DrawBSpline(_bspline_points, _bspline_knot_vector);
+            break;
+        }
+    });
+    _config.monitorChanges();
 }
 
 DrawingAlgoApp::~DrawingAlgoApp()
@@ -93,6 +124,36 @@ void DrawingAlgoApp::OnRender() {
     Super::RenderHelpText();
     Super::RenderFPS();
     Super::RenderMousePos();
+}
+
+//
+// Config loader helper
+void DrawingAlgoApp::loadConfigData() {
+    const std::string d_t = _config.get("", "delta_t", "0.01");
+    const std::string bspline_degree = _config.get("B-Spline", "poly_degree", "3");
+    std::string bspline_knot_vec = _config.get("B-Spline", "knot_vec", "[0, 0, 0, 0, 0.49, 0.75, 1, 1, 1, 1]");
+
+    try {
+        _delta_t = std::stof(d_t);
+        _bspline_poly_degree = std::stoi(bspline_degree);
+
+        // processing B-Spline knot vector
+        // converting knot_vec into internal float vector
+        const std::regex r(R"<<(([0-9]+(.[0-9]+)?))<<");
+        std::smatch m;
+
+        std::vector<float> temp;
+        while (std::regex_search(bspline_knot_vec, m, r)) {
+            std::string knot_val = m[0].str();
+            temp.push_back(stof(knot_val));
+
+            // next iteration after found match
+            bspline_knot_vec = m.suffix().str();
+        }
+
+        _bspline_knot_vector = temp;
+    }
+    catch (std::exception) {}
 }
 
 //
@@ -257,7 +318,6 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius, const Pixel& 
 }
 
 void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
-    const auto t_stepsize = .01f;
     const auto size = support_points.size();
 
     if (size < 2U)
@@ -266,7 +326,7 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
     std::vector<Point2D> points;
     std::vector<std::vector<Point2D>> b(size, std::vector<Point2D>(size));
 
-    for (float t = .0f; t <= 1.f; t += t_stepsize) {
+    for (float t = .0f; t <= 1.f; t += _delta_t) {
         // de Casteljau algorithm
         // for i = 0 .. n
         for (auto i = 0u; i < size; ++i) {
@@ -307,9 +367,8 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
 }
 
 void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> knot_vector) {
-    const auto t_stepsize = .005f;
     const auto support_points_size = support_points.size(); // m
-    const auto polynom_degree = 3; // n
+    const auto& polynom_degree = _bspline_poly_degree; // n
 
     // knot_vector content:
     // n + 1   0en
@@ -318,8 +377,13 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
 
     // größe: n + 1 + m
 
-    if (support_points_size != 6U)
+    if (support_points_size != 6U) {
         return;
+    }
+    else if (knot_vector.size() != _bspline_poly_degree + 1 + support_points_size) {
+        ClearPixelData();
+        return;
+    }
 
     std::vector<std::vector<Point2D>> b(support_points_size, std::vector<Point2D>(polynom_degree + 1));
     std::vector<Point2D> points;
@@ -329,7 +393,7 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
 
     const auto& n = polynom_degree;
 
-    for (float t = .0f; t <= 1.f; t += t_stepsize) {
+    for (float t = .0f; t <= 1.f; t += _delta_t) {
         // Berechne i so, dass t_i ≤ t < t_i+1, 0 ≤ i ≤ m 
         const int i = [&](float t) {
             int i = 0;
