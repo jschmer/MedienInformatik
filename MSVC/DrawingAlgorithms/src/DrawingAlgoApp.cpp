@@ -379,6 +379,11 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius, const Pixel& 
 void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
     const auto size = support_points.size();
 
+    // render support points in red
+    for (auto& p: support_points) {
+        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
+    }
+
     if (size < 2U)
         return;
 
@@ -404,11 +409,6 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
 
         // p(t) = b(n,n)
         points.push_back(b[size-1][size-1]);
-    }
-
-    // render support points in red
-    for (auto& p: support_points) {
-        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
     }
 
     // render curve
