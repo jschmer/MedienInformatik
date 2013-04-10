@@ -701,7 +701,7 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
         DrawBSpline(_bspline_points, _bspline_knot_vector);
         break;
     case DrawingType::FillRectangle:
-        FillRectangle(cachex, cachey, x, y, Pixel(0xFFFF00));
+        FillRectangle(cachex, cachey, x, y);
         break;
     case DrawingType::FillTriangle:
         _vertices.emplace_back(x, y);
