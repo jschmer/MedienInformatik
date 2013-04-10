@@ -5,26 +5,35 @@
 #include <Point2D.h>
 #include <Config/ConfigFile.h>
 
+
+struct Pixel {
+    BYTE R;
+    BYTE G;
+    BYTE B;
+
+    Pixel();
+    Pixel(uint R, uint G, uint B);
+    Pixel(uint hex); // 0xRRGGBB
+    Pixel operator *(float b);
+    Pixel operator +(Pixel other);
+};
+Pixel operator *(float a, Pixel b);
+
 class DrawingAlgoApp : public SFMLApp {
     typedef SFMLApp Super;
     typedef unsigned char BYTE;
 
     //
     // additional type declarations
-    struct Pixel {
-        BYTE R, G, B;
-
-        Pixel();
-        Pixel(uint R, uint G, uint B);
-        Pixel(uint hex); // 0xRRGGBB
-    };
-
     enum class DrawingType {
         None,
         Line,
         Circle,
         Bezier,
-        BSpline
+        BSpline,
+        FillRectangle,
+        FillTriangle,
+        FillPolygon
     };
 
     // DrawingAlgoApp declaration
@@ -56,6 +65,7 @@ private:
     void RenderPixelArray();
     void SetPixel(uint x, uint y, const Pixel &pix);
     void ClearPixelData();
+    void DrawPoints(const std::vector<Point2D>& points, const Pixel& pix = Pixel(0, 255, 0));
 
     void SaveAsPPM(const char* filename = "Screen_capture.ppm");
 
@@ -68,9 +78,15 @@ private:
     void DrawBezier(const std::vector<Point2D>& support_points);
     void DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> _knot_vector);
 
+    void FillRectangle(uint x1, uint y1, uint x2, uint y2);
+    void FillTriangle(std::vector<Point2D>& vertices);
+    void FillPolygon(const std::vector<Point2D>& vertices, const Pixel& pix = Pixel(0, 255, 0));
+
     //
     // data
 private:
+    std::vector<Point2D> _vertices;
+
     std::vector<Point2D> _bezier_points;
 
     std::vector<Point2D> _bspline_points;

@@ -30,18 +30,36 @@ string join(const T& v, const string& delim) {
 
 //
 // Pixel struct definition
-DrawingAlgoApp::Pixel::Pixel()
+Pixel operator *(float a, Pixel b) {
+    return b * a;
+}
+
+Pixel::Pixel()
     : R(0), G(0), B(0)
 {}
 
-DrawingAlgoApp::Pixel::Pixel(uint R, uint G, uint B)
+Pixel::Pixel(uint R, uint G, uint B)
     : R(R), G(G), B(B)
 {}
 
-DrawingAlgoApp::Pixel::Pixel(uint hex) {
+Pixel::Pixel(uint hex) {
     R = (hex & 0xFF0000) >> 2*8;
     G = (hex & 0x00FF00) >> 8;
     B = hex & 0x0000FF;
+}
+
+Pixel Pixel::operator *(float b) {
+    R*=b;
+    G*=b;
+    B*=b;
+    return *this;
+}
+
+Pixel Pixel::operator +(Pixel other) {
+    R += other.R;
+    G += other.G;
+    B += other.B;
+    return *this;
 }
 
 //
@@ -105,6 +123,9 @@ Modes:
 3 = Circle
 4 = Bezier
 5 = B-Spline
+6 = Fill Rectangle
+7 = Fill Triangle
+8 = Fill Polygon
 )";
 
     auto help = _help_text.getString();
@@ -222,7 +243,6 @@ void DrawingAlgoApp::SetPixel(uint x, uint y, const Pixel &pix) {
         return;
 
     auto idx = (_height - 1 - y) * _width + x;
-    idx = std::min(idx, _num_pixels-1);
 
     auto size = sizeof(pix);
     memcpy(&_pixel_data[idx], &pix, size);
@@ -230,6 +250,12 @@ void DrawingAlgoApp::SetPixel(uint x, uint y, const Pixel &pix) {
 
 void DrawingAlgoApp::ClearPixelData() {
     memset(_pixel_data.get(), 0, sizeof(Pixel)*_width*_height);
+}
+
+void DrawingAlgoApp::DrawPoints(const std::vector<Point2D>& points, const Pixel& pix) {
+    for (auto& p: points) {
+        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, pix);
+    }
 }
 
 void DrawingAlgoApp::RenderPixelArray() {
@@ -246,27 +272,15 @@ void DrawingAlgoApp::SaveAsPPM(const char* filename) {
     const auto magic_number = "P6";
     const auto bytes_per_pixel = 3;
 
-    std::stringstream ss;
-    ss << _width;
-    const auto width = ss.str();
-
-    ss = std::stringstream();
-    ss << _height;
-    const auto height = ss.str();
-
-    ss = std::stringstream();
-    ss << 255;
-    const auto max_color = ss.str();
-
     std::ofstream out(filename);
     out << magic_number << endl;
-    out << width << " " << height << endl;
-    out << max_color << "\n";
-
+    out << _width << " " << _height << endl;
+    out << 255 << endl;
+    out << (char)0 << char(0);
     for (auto h = 0U; h < _height; ++h) {
         for (auto w = 0U; w < _width; ++w) {
              auto& pix = _pixel_data[(_height - h - 1)*_width + w];
-             out << pix.G << pix.B << pix.R;
+             out << pix.R << pix.G << pix.B;
         }
     }
 }
@@ -380,9 +394,7 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
     const auto size = support_points.size();
 
     // render support points in red
-    for (auto& p: support_points) {
-        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
-    }
+    DrawPoints(support_points, Pixel(0xFF0000));
 
     if (size < 2U)
         return;
@@ -437,9 +449,7 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     // größe: n + p + 1
 
     // render support points in red
-    for (auto& p: support_points) {
-        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, Pixel(0xFF0000));
-    }
+    DrawPoints(support_points, Pixel(0xFF0000));
 
     if (knot_vector.size() != polynom_degree + 1 + support_points_size) {
         return;
@@ -499,6 +509,105 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     }
 }
 
+void DrawingAlgoApp::FillRectangle(uint x1, uint y1, uint x2, uint y2) {
+    // get bounding box
+    auto xmin = std::min(x1, x2);
+    auto xmax = std::max(x1, x2);
+    auto ymin = std::min(y1, y2);
+    auto ymax = std::max(y1, y2);
+
+    float xlen = xmax - xmin;
+    float ylen = ymax - ymin;
+
+    auto p0_pix = Pixel(0xFF0000);
+    auto p1_pix = Pixel(0x00FF00);
+    auto p2_pix = Pixel(0x0000FF);
+    auto p3_pix = Pixel(0xFFFFFF);
+
+    // fill rectangle
+    for (auto y = ymin; y <= ymax; ++y) {
+        for (auto x = xmin; x <= xmax; ++x) {
+            // bilinear interpolate colors
+            auto r1 = (xmax-x)/xlen * p0_pix + (x-xmin)/xlen * p1_pix;
+            auto r2 = (xmax-x)/xlen * p2_pix + (x-xmin)/xlen * p3_pix;
+            auto p = (ymax-y)/ylen * r1 + (y-ymin)/ylen * r2;
+            SetPixel(x, y, p);
+        }
+    }
+}
+
+void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
+    DrawPoints(vertices, Pixel(0xFFFF00));
+
+    if (vertices.size() == 3) {
+        // clear drawing area
+        ClearPixelData();
+
+        using std::max;
+        using std::min;
+
+        // CCW - counter clockwise
+        auto x0 = static_cast<int>(vertices[0].x);
+        auto x1 = static_cast<int>(vertices[2].x);
+        auto x2 = static_cast<int>(vertices[1].x);
+        auto y0 = static_cast<int>(vertices[0].y);
+        auto y1 = static_cast<int>(vertices[2].y);
+        auto y2 = static_cast<int>(vertices[1].y);
+
+        auto p0_pix = Pixel(0xFF0000);
+        auto p1_pix = Pixel(0x00FF00);
+        auto p2_pix = Pixel(0x0000FF);
+
+        // get bounding box
+        int xmin = min(x0, min(x1, x2));
+        int ymin = min(y0, min(y1, y2));
+        int xmax = max(x0, max(x1, x2));
+        int ymax = max(y0, max(y1 ,y2));
+        
+        int f0 = (y0 - y1)*(xmin - x0) + (x1 - x0)*(ymin - y0);
+        int f1 = (y1 - y2)*(xmin - x1) + (x2 - x1)*(ymin - y1);
+        int f2 = (y2 - y0)*(xmin - x2) + (x0 - x2)*(ymin - y2);
+
+        // fill triangle
+        for (int y = ymin; y <= ymax; y++) {
+            int ff0 = f0;
+            int ff1 = f1;
+            int ff2 = f2;
+            float c = static_cast<float>(f0 + f1 + f2);
+            
+            for (int x = xmin; x <= xmax; x++) {
+                if(ff0 >= 0 && ff1 >=0 && ff2 >= 0) {
+                    // interpolate color
+                    auto pixel = ff0/c * p0_pix + ff1/c * p1_pix + ff2/c * p2_pix;
+                    SetPixel(x, y, pixel);
+                }
+                
+                ff0 = ff0 + (y0-y1);
+                ff1 = ff1 + (y1-y2);
+                ff2 = ff2 + (y2-y0);
+            }
+            
+            f0 = f0 + (x1-x0);
+            f1 = f1 + (x2-x1);
+            f2 = f2 + (x0-x2);
+        }
+
+        // clear vertices to be able to draw a new one
+        vertices.clear();
+    }
+}
+
+void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pixel& pix) {
+    DrawPoints(vertices, pix);
+
+    if (vertices.size() >= 3) {
+        // clear drawing area
+        ClearPixelData();
+
+        // fill polygon
+
+    }
+}
 
 //
 // event handler
@@ -515,6 +624,7 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         // clear support points
         _bezier_points.clear();
         _bspline_points.clear();
+        _vertices.clear();
         break;
     case Key::X:
         SaveAsPPM();
@@ -533,6 +643,15 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         break;
     case Key::Num5:
         _draw_type = DrawingType::BSpline;
+        break;
+    case Key::Num6:
+        _draw_type = DrawingType::FillRectangle;
+        break;
+    case Key::Num7:
+        _draw_type = DrawingType::FillTriangle;
+        break;
+    case Key::Num8:
+        _draw_type = DrawingType::FillPolygon;
         break;
     }
 }
@@ -580,6 +699,17 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
 
         // render bezier
         DrawBSpline(_bspline_points, _bspline_knot_vector);
+        break;
+    case DrawingType::FillRectangle:
+        FillRectangle(cachex, cachey, x, y, Pixel(0xFFFF00));
+        break;
+    case DrawingType::FillTriangle:
+        _vertices.emplace_back(x, y);
+        FillTriangle(_vertices);
+        break;
+    case DrawingType::FillPolygon:
+        _vertices.emplace_back(x, y);
+        FillPolygon(_vertices, Pixel(0x00FFFF));
         break;
     }
 }
