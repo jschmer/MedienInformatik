@@ -3,6 +3,10 @@
 #include <algorithm>
 
 //
+// Point2D static initialization
+std::function<bool(Point2D, Point2D)> Point2D::less_y = [](const Point2D& first, const Point2D& second) { return first.y < second.y; };
+
+//
 // Point2D struct definition
 Point2D::Point2D()
     : x(0U), y(0U)

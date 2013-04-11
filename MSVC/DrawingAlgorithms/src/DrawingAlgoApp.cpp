@@ -1,6 +1,8 @@
 #include <DrawingAlgoApp.h>
 
+#include <cassert>
 #include <algorithm>
+#include <set>
 #include <fstream>
 #include <sstream>
 #include <regex>
@@ -9,6 +11,8 @@ using std::string;
 using std::ostringstream;
 
 #include <SFML/OpenGL.hpp>
+
+#include <boost/heap/fibonacci_heap.hpp>
 
 // signum function
 template <typename T> int sgn(T val) {
@@ -238,6 +242,8 @@ void DrawingAlgoApp::updateConfigData() {
 
 //
 // drawing helper
+
+// origin is upper left corner
 void DrawingAlgoApp::SetPixel(uint x, uint y, const Pixel &pix) {
     if (x >= _width || y >= _height)
         return;
@@ -467,7 +473,8 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
         // Berechne i so, dass t_i ≤ t < t_i+1, 0 ≤ i ≤ p
         const int i = [&](float t) {
             int i = 0;
-            while (i < support_points_size && knot_vector[i] <= t)
+            auto size = static_cast<int>(support_points_size);
+            while (i < size && knot_vector[i] <= t)
                 ++i;
             return --i;
         }(t);
@@ -516,8 +523,8 @@ void DrawingAlgoApp::FillRectangle(uint x1, uint y1, uint x2, uint y2) {
     auto ymin = std::min(y1, y2);
     auto ymax = std::max(y1, y2);
 
-    float xlen = xmax - xmin;
-    float ylen = ymax - ymin;
+    float xlen = static_cast<float>(xmax - xmin);
+    float ylen = static_cast<float>(ymax - ymin);
 
     auto p0_pix = Pixel(0xFF0000);
     auto p1_pix = Pixel(0x00FF00);
@@ -606,6 +613,119 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pix
 
         // fill polygon
 
+        // passive edge struct
+        struct PassiveEdge {
+            int x0, y0;
+            int x1, y1;
+
+            PassiveEdge(Point2D first, Point2D second) {
+                // edges always rise in y (positive slope?)
+
+                x0 = static_cast<int>(first.x);
+                y0 = static_cast<int>(first.y);
+
+                x1 = static_cast<int>(second.x);
+                y1 = static_cast<int>(second.y);
+
+                if (!Point2D::less_y(first, second)) {
+                    std::swap(x0, x1);
+                    std::swap(y0, y1);
+                }
+            }
+        };
+        struct less_passive_edge {
+            bool operator() (const PassiveEdge& first, const PassiveEdge& second) {
+                return first.y0 < second.y0;
+            }
+        };
+        
+        // active edge struct
+        struct ActiveEdge {
+            float xs;
+            float dx;
+            int ymax;
+
+            ActiveEdge(float xs, float dx, int ymax)
+                : xs(xs), dx(dx), ymax(ymax)
+            {}
+        };
+        struct less_active_edge {
+            bool operator() (const ActiveEdge& first, const ActiveEdge& second) {
+                return first.xs < second.xs;
+            }
+        };
+
+        // adding all edges to passives set
+        std::multiset<PassiveEdge, less_passive_edge> passives;
+        std::multiset<ActiveEdge, less_active_edge>  actives;
+        for (auto first_it = _vertices.cbegin(), second_it = _vertices.cbegin()+1; first_it != _vertices.cend(); ++first_it, ++second_it) {
+            // last vertex is the first one to close the polygon (last edge should close the polygon)
+            if (second_it == _vertices.cend())
+                second_it = _vertices.cbegin();
+
+            auto& first  = *first_it;
+            auto& second = *second_it;
+
+            passives.emplace(first, second);
+        }
+
+        // draw all edges
+        for (auto& edge : passives)
+            DrawLineBresenham(edge.x0, edge.y0, edge.x1, edge.y1, Pixel(0xFF00FF));
+
+        // lesser compare for Point2Ds y-values
+        auto miny = static_cast<int>(std::min_element(_vertices.cbegin(), _vertices.cend(), Point2D::less_y)->y);
+        auto maxy = static_cast<int>(std::max_element(_vertices.cbegin(), _vertices.cend(), Point2D::less_y)->y);
+
+        for (auto y = miny; y <= maxy; ++y) {
+            // push all passive edges with ymin == y into actives set
+            for (auto iter = passives.begin(); iter != passives.end(); ) {
+                const auto& passive_edge = *iter;
+
+                if (passive_edge.y0 == y) {
+                    // initialise ActiveEdge::xs == xmin
+                    auto xs    = static_cast<float>(passive_edge.x0);
+                    auto ymax  = std::max(passive_edge.y0, passive_edge.y1);
+                    auto dx    = (passive_edge.x1 - passive_edge.x0) / (float)(passive_edge.y1 - passive_edge.y0);
+
+                    actives.emplace(xs, dx, ymax);
+                    passives.erase(iter++); // pass old iterator to erase but jump one further before!
+                }
+                else {
+                    ++iter;
+                }
+            }
+                
+            // erase all edges with ymax == y from actives
+            for (auto iter = actives.begin(); iter != actives.end(); ) {
+                const auto& active_edge = *iter;
+
+                if (active_edge.ymax == y)
+                    actives.erase(iter++); // pass old iterator to erase but jump one further before!
+                else
+                    ++iter;
+            }
+
+            // set pixel within the spans of actives xs
+            assert(actives.size() % 2 == 0);
+            for (auto first_it = actives.cbegin(); first_it != actives.cend(); ++++first_it) {
+                auto second_it = first_it;
+                ++second_it;
+
+                auto& intersect1 = first_it->xs;
+                auto& intersect2 = second_it->xs;
+
+                for (auto x = intersect1; x < intersect2; ++x)
+                    SetPixel(x, y, Pixel(0xFF00FF));
+            }
+
+            // increment all xs with dx (of active edges)
+            decltype(actives) ac_cpy; // need a copy because all elements in a multiset are const...
+            for (const auto& edge : actives) {
+                ac_cpy.emplace(edge.xs + edge.dx, edge.dx, edge.ymax);
+            }
+            actives = ac_cpy;
+        }
     }
 }
 
