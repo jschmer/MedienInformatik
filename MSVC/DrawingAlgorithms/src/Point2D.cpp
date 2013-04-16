@@ -20,6 +20,10 @@ Point2D::Point2D(const int x, const int y)
     : x(static_cast<float>(x)), y(static_cast<float>(y))
 {}
 
+Point2D::Point2D(sf::Vector2f v)
+    :  x(static_cast<float>(v.x)), y(static_cast<float>(v.y))
+{}
+
 //
 // Point2D free standing operator functions
 const Point2D operator*(const float& lhs, const Point2D& rhs)

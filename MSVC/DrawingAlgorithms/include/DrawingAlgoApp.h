@@ -6,18 +6,19 @@
 #include <Config/ConfigFile.h>
 
 
-struct Pixel {
+struct Color {
     BYTE R;
     BYTE G;
     BYTE B;
 
-    Pixel();
-    Pixel(uint R, uint G, uint B);
-    Pixel(uint hex); // 0xRRGGBB
-    Pixel operator *(float b);
-    Pixel operator +(Pixel other);
+    Color();
+    Color(uint R, uint G, uint B);
+    Color(uint hex); // 0xRRGGBB
+
+    Color operator *(float b);
+    Color operator +(Color other);
 };
-Pixel operator *(float a, Pixel b);
+Color operator *(float a, Color b);
 
 class DrawingAlgoApp : public SFMLApp {
     typedef SFMLApp Super;
@@ -62,25 +63,26 @@ private:
     //
     // drawing helper
 private:
-    void RenderPixelArray();
-    void SetPixel(uint x, uint y, const Pixel &pix);
-    void ClearPixelData();
-    void DrawPoints(const std::vector<Point2D>& points, const Pixel& pix = Pixel(0, 255, 0));
+    void RenderColorArray();
+    void SetColor(uint x, uint y, const Color &color);
+    void SetColor(const Point2D pixel, const Color &color);
+    void ClearColorData();
+    void DrawPoints(const std::vector<Point2D>& points, const Color& color = Color(0, 255, 0));
 
     void SaveAsPPM(const char* filename = "Screen_capture.ppm");
 
     //
     // drawing algorithms
 private:
-    void DrawLineBresenham(uint x1, uint y1, uint x2, uint y2, const Pixel& pix = Pixel(0, 255, 0));
-    void DrawLineMidpoint (uint x1, uint y1, uint x2, uint y2, const Pixel& pix = Pixel(0, 255, 0));
-    void DrawCircle(uint posx, uint posy, uint radius, const Pixel& pix = Pixel(0, 255, 0));
+    void DrawLineBresenham(const Point2D p0, const Point2D p1, const Color& color = Color(0, 255, 0));
+    void DrawLineMidpoint (const Point2D p0, const Point2D p1, const Color& color = Color(0, 255, 0));
+    void DrawCircle(const Point2D center, uint radius, const Color& color = Color(0, 255, 0));
     void DrawBezier(const std::vector<Point2D>& support_points);
     void DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> _knot_vector);
 
-    void FillRectangle(uint x1, uint y1, uint x2, uint y2);
+    void FillRectangle(const Point2D p0, const Point2D p1);
     void FillTriangle(std::vector<Point2D>& vertices);
-    void FillPolygon(const std::vector<Point2D>& vertices, const Pixel& pix = Pixel(0, 255, 0));
+    void FillPolygon(const std::vector<Point2D>& vertices, const Color& color = Color(0, 255, 0));
 
     //
     // data
@@ -93,10 +95,10 @@ private:
     std::vector<float>   _bspline_knot_vector;
     int                  _bspline_poly_degree;
 
-    sf::Vector2i _mouse_pos_cache;
+    sf::Vector2f _mouse_pos_cache;
     DrawingType  _draw_type;
-    const uint   _num_pixels;
-    std::unique_ptr<Pixel[]> _pixel_data; // _width * _height pixels
+    const uint   _num_Colors;
+    std::unique_ptr<Color[]> _Color_data; // _width * _height Colors
 
 private:
     ConfigFile _config;

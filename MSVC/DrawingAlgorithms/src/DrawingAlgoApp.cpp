@@ -33,33 +33,33 @@ string join(const T& v, const string& delim) {
 }
 
 //
-// Pixel struct definition
-Pixel operator *(float a, Pixel b) {
+// Color struct definition
+Color operator *(float a, Color b) {
     return b * a;
 }
 
-Pixel::Pixel()
+Color::Color()
     : R(0), G(0), B(0)
 {}
 
-Pixel::Pixel(uint R, uint G, uint B)
+Color::Color(uint R, uint G, uint B)
     : R(R), G(G), B(B)
 {}
 
-Pixel::Pixel(uint hex) {
+Color::Color(uint hex) {
     R = (hex & 0xFF0000) >> 2*8;
     G = (hex & 0x00FF00) >> 8;
     B = hex & 0x0000FF;
 }
 
-Pixel Pixel::operator *(float b) {
+Color Color::operator *(float b) {
     R*=b;
     G*=b;
     B*=b;
     return *this;
 }
 
-Pixel Pixel::operator +(Pixel other) {
+Color Color::operator +(Color other) {
     R += other.R;
     G += other.G;
     B += other.B;
@@ -70,14 +70,14 @@ Pixel Pixel::operator +(Pixel other) {
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
     : Super(800u, 600u, "Drawing Algorithms", sf::Style::Close),
-    _num_pixels(_width*_height),
+    _num_Colors(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
     _config("DrawingAlgoApp.cfg")
 {
-    _pixel_data.reset(new Pixel[_width*_height]);
+    _Color_data.reset(new Color[_width*_height]);
 
-    ClearPixelData();
+    ClearColorData();
 
     // setup config file monitor
     updateConfigData();
@@ -89,15 +89,15 @@ DrawingAlgoApp::DrawingAlgoApp()
         // redraw curves with updated values
         switch (_draw_type) {
         case DrawingType::Bezier:
-            // clear pixeldata
-            ClearPixelData();
+            // clear Colordata
+            ClearColorData();
 
             // render bezier
             DrawBezier(_bezier_points);
             break;
         case DrawingType::BSpline:
-            // clear pixeldata
-            ClearPixelData();
+            // clear Colordata
+            ClearColorData();
 
             // render bezier
             DrawBSpline(_bspline_points, _bspline_knot_vector);
@@ -118,7 +118,7 @@ bool DrawingAlgoApp::OnInit() {
 
     // adjusting help text
     const auto append_text = R"(
-C = Clear Pixelbuffer
+C = Clear Colorbuffer
 X = Capture Screen
 
 Modes:
@@ -143,8 +143,8 @@ Modes:
 }
 
 void DrawingAlgoApp::OnRender() {
-    // render the pixel buffer 
-    RenderPixelArray();
+    // render the Color buffer 
+    RenderColorArray();
 
     // render "HUD"
     Super::RenderHelpText();
@@ -244,29 +244,33 @@ void DrawingAlgoApp::updateConfigData() {
 // drawing helper
 
 // origin is upper left corner
-void DrawingAlgoApp::SetPixel(uint x, uint y, const Pixel &pix) {
+void DrawingAlgoApp::SetColor(uint x, uint y, const Color &color) {
     if (x >= _width || y >= _height)
         return;
 
     auto idx = (_height - 1 - y) * _width + x;
 
-    auto size = sizeof(pix);
-    memcpy(&_pixel_data[idx], &pix, size);
+    auto size = sizeof(color);
+    memcpy(&_Color_data[idx], &color, size);
 }
 
-void DrawingAlgoApp::ClearPixelData() {
-    memset(_pixel_data.get(), 0, sizeof(Pixel)*_width*_height);
+void DrawingAlgoApp::SetColor(const Point2D pixel, const Color &color) {
+    SetColor(pixel.x, pixel.y, color);
 }
 
-void DrawingAlgoApp::DrawPoints(const std::vector<Point2D>& points, const Pixel& pix) {
+void DrawingAlgoApp::ClearColorData() {
+    memset(_Color_data.get(), 0, sizeof(Color)*_width*_height);
+}
+
+void DrawingAlgoApp::DrawPoints(const std::vector<Point2D>& points, const Color& color) {
     for (auto& p: points) {
-        DrawCircle(static_cast<uint>(p.x), static_cast<uint>(p.y), 1, pix);
+        DrawCircle(p, 1, color);
     }
 }
 
-void DrawingAlgoApp::RenderPixelArray() {
-    // draw pixel data
-    glDrawPixels(_width, _height, GL_RGB, GL_UNSIGNED_BYTE, _pixel_data.get());
+void DrawingAlgoApp::RenderColorArray() {
+    // draw Color data
+    glDrawPixels(_width, _height, GL_RGB, GL_UNSIGNED_BYTE, _Color_data.get());
 
     // Flush drawing commands
     glFlush();
@@ -276,7 +280,7 @@ void DrawingAlgoApp::SaveAsPPM(const char* filename) {
     using std::endl;
     
     const auto magic_number = "P6";
-    const auto bytes_per_pixel = 3;
+    const auto bytes_per_Color = 3;
 
     std::ofstream out(filename);
     out << magic_number << endl;
@@ -285,20 +289,21 @@ void DrawingAlgoApp::SaveAsPPM(const char* filename) {
     out << (char)0 << char(0);
     for (auto h = 0U; h < _height; ++h) {
         for (auto w = 0U; w < _width; ++w) {
-             auto& pix = _pixel_data[(_height - h - 1)*_width + w];
-             out << pix.R << pix.G << pix.B;
+             auto& color = _Color_data[(_height - h - 1)*_width + w];
+             out << color.R << color.G << color.B;
         }
     }
 }
 
 //
 // drawing algorithms
-void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2, const Pixel& pix) {
+void DrawingAlgoApp::DrawLineBresenham(const Point2D p0, const Point2D p1, const Color& color) {
     // Startpunkt
-    int x = x1, y = y1;
+    int x = p0.x;
+    int y = p0.y;
 
-    int dx = x2 - x1;
-    int dy = y2 - y1;
+    int dx = p1.x - p0.x;
+    int dy = p1.y - p0.y;
 
     // Schrittrichtung für Diagonalschritt ermitteln (sgn liefert -1, 0, 1)
     int diagonal_dx = sgn(dx);
@@ -306,7 +311,7 @@ void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2, const
 
     int errSR, errLR;               // Fehleranpassung in schneller Richtung (SR) und langsamer Richtung (LR)
     int parallel_dx, parallel_dy;   // Schrittweite für Parallelschritt 
-    int num_elements;               // Anzahl zu zeichnender Pixel
+    int num_elements;               // Anzahl zu zeichnender Color
 
     // Unterscheidung zwischen schneller und langsamer Richtung
     if (std::abs(dx) > std::abs(dy)) {
@@ -315,21 +320,21 @@ void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2, const
         parallel_dy = 0;
         errSR = std::abs(dx)*2;
         errLR = std::abs(dy)*2;
-        num_elements = std::abs(dx);    // Anzahl zu zeichnender Pixel in schneller Richtung
+        num_elements = std::abs(dx);    // Anzahl zu zeichnender Color in schneller Richtung
     } else {
         // y ist schnelle Richtung, d.h. mache keinen Schritt in x-Richtung bei Parallelschritt
         parallel_dx = 0;
         parallel_dy = diagonal_dy;
         errSR = std::abs(dy)*2;
         errLR = std::abs(dx)*2;
-        num_elements = std::abs(dy);    // Anzahl zu zeichnender Pixel in schneller Richtung
+        num_elements = std::abs(dy);    // Anzahl zu zeichnender Color in schneller Richtung
     }
 
     // Fehlervariable initialisieren
     int error = errLR - num_elements;
 
     for (int i = 0; i < num_elements; ++i) {
-        SetPixel(x, y, pix);
+        SetColor(x, y, color);
         
         // Fehlervariable aktualisieren (Schritt in schneller Richtung)
         error += errLR;
@@ -349,16 +354,16 @@ void DrawingAlgoApp::DrawLineBresenham(uint x1, uint y1, uint x2, uint y2, const
     }
 }
 
-void DrawingAlgoApp::DrawLineMidpoint(uint x1, uint y1, uint x2, uint y2, const Pixel& pix) {
-    int x = x1;
-    int y = y1;
-    int dx = x2 - x1;
-    int dy = y2 - y1;
+void DrawingAlgoApp::DrawLineMidpoint(const Point2D p0, const Point2D p1, const Color& color) {
+    int x = p0.x;
+    int y = p0.y;
+    int dx = p1.x - p0.x;
+    int dy = p1.y - p0.y;
     int f = dy - dx/2;
 
     // immer Schritt in schnelle Richtung, gelegentlich in langsame Richtung
     for (int i = 1; i <= dx; ++i) { 
-        SetPixel(x, y, pix);
+        SetColor(x, y, color);
         x++;
         if (f > 0) { 
             y += 1;
@@ -367,7 +372,7 @@ void DrawingAlgoApp::DrawLineMidpoint(uint x1, uint y1, uint x2, uint y2, const 
     }
 }
 
-void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius, const Pixel& pix) {
+void DrawingAlgoApp::DrawCircle(const Point2D center, uint radius, const Color& color) {
     int x1 = 0;
     int y1 = radius;
     int f  = 1 - radius;
@@ -376,14 +381,14 @@ void DrawingAlgoApp::DrawCircle(uint posx, uint posy, uint radius, const Pixel& 
 
     while(x1 <= y1) {
         // drawing each possible arc
-        SetPixel(posx+x1, posy-y1, pix);
-        SetPixel(posx+x1, posy+y1, pix);
-        SetPixel(posx-x1, posy-y1, pix);
-        SetPixel(posx-x1, posy+y1, pix);
-        SetPixel(posx+y1, posy-x1, pix);
-        SetPixel(posx+y1, posy+x1, pix);
-        SetPixel(posx-y1, posy-x1, pix);
-        SetPixel(posx-y1, posy+x1, pix);
+        SetColor(center.x+x1, center.y-y1, color);
+        SetColor(center.x+x1, center.y+y1, color);
+        SetColor(center.x-x1, center.y-y1, color);
+        SetColor(center.x-x1, center.y+y1, color);
+        SetColor(center.x+y1, center.y-x1, color);
+        SetColor(center.x+y1, center.y+x1, color);
+        SetColor(center.x-y1, center.y-x1, color);
+        SetColor(center.x-y1, center.y+x1, color);
 
         x1++;
         if(f > 0) {
@@ -400,7 +405,7 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
     const auto size = support_points.size();
 
     // render support points in red
-    DrawPoints(support_points, Pixel(0xFF0000));
+    DrawPoints(support_points, Color(0xFF0000));
 
     if (size < 2U)
         return;
@@ -434,10 +439,7 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
     for (auto it = points.cbegin() + 1; it != points.cend(); ++it) {
         auto& p1 = *it;
 
-        DrawLineBresenham(static_cast<uint>(p0.x),
-                          static_cast<uint>(p0.y),
-                          static_cast<uint>(p1.x),
-                          static_cast<uint>(p1.y));
+        DrawLineBresenham(p0, p1);
 
         p0 = p1;
     }
@@ -455,7 +457,7 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     // größe: n + p + 1
 
     // render support points in red
-    DrawPoints(support_points, Pixel(0xFF0000));
+    DrawPoints(support_points, Color(0xFF0000));
 
     if (knot_vector.size() != polynom_degree + 1 + support_points_size) {
         return;
@@ -506,49 +508,45 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     for (auto it = points.cbegin() + 1; it != points.cend(); ++it) {
         auto& p1 = *it;
 
-        DrawLineBresenham(static_cast<uint>(p0.x),
-                          static_cast<uint>(p0.y),
-                          static_cast<uint>(p1.x),
-                          static_cast<uint>(p1.y),
-                          Pixel(0xFFFF00));
+        DrawLineBresenham(p0, p1, Color(0xFFFF00));
 
         p0 = p1;
     }
 }
 
-void DrawingAlgoApp::FillRectangle(uint x1, uint y1, uint x2, uint y2) {
+void DrawingAlgoApp::FillRectangle(const Point2D p0, const Point2D p1) {
     // get bounding box
-    auto xmin = std::min(x1, x2);
-    auto xmax = std::max(x1, x2);
-    auto ymin = std::min(y1, y2);
-    auto ymax = std::max(y1, y2);
+    auto xmin = std::min(p0.x, p1.x);
+    auto xmax = std::max(p0.x, p1.x);
+    auto ymin = std::min(p0.y, p1.y);
+    auto ymax = std::max(p0.y, p1.y);
 
     float xlen = static_cast<float>(xmax - xmin);
     float ylen = static_cast<float>(ymax - ymin);
 
-    auto p0_pix = Pixel(0xFF0000);
-    auto p1_pix = Pixel(0x00FF00);
-    auto p2_pix = Pixel(0x0000FF);
-    auto p3_pix = Pixel(0xFFFFFF);
+    auto p0_color = Color(0xFF0000);
+    auto p1_color = Color(0x00FF00);
+    auto p2_color = Color(0x0000FF);
+    auto p3_color = Color(0xFFFFFF);
 
     // fill rectangle
     for (auto y = ymin; y <= ymax; ++y) {
         for (auto x = xmin; x <= xmax; ++x) {
             // bilinear interpolate colors
-            auto r1 = (xmax-x)/xlen * p0_pix + (x-xmin)/xlen * p1_pix;
-            auto r2 = (xmax-x)/xlen * p2_pix + (x-xmin)/xlen * p3_pix;
+            auto r1 = (xmax-x)/xlen * p0_color + (x-xmin)/xlen * p1_color;
+            auto r2 = (xmax-x)/xlen * p2_color + (x-xmin)/xlen * p3_color;
             auto p = (ymax-y)/ylen * r1 + (y-ymin)/ylen * r2;
-            SetPixel(x, y, p);
+            SetColor(x, y, p);
         }
     }
 }
 
 void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
-    DrawPoints(vertices, Pixel(0xFFFF00));
+    DrawPoints(vertices, Color(0xFFFF00));
 
     if (vertices.size() == 3) {
         // clear drawing area
-        ClearPixelData();
+        ClearColorData();
 
         using std::max;
         using std::min;
@@ -561,9 +559,9 @@ void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
         auto y1 = static_cast<int>(vertices[2].y);
         auto y2 = static_cast<int>(vertices[1].y);
 
-        auto p0_pix = Pixel(0xFF0000);
-        auto p1_pix = Pixel(0x00FF00);
-        auto p2_pix = Pixel(0x0000FF);
+        auto p0_color = Color(0xFF0000);
+        auto p1_color = Color(0x00FF00);
+        auto p2_color = Color(0x0000FF);
 
         // get bounding box
         int xmin = min(x0, min(x1, x2));
@@ -585,8 +583,8 @@ void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
             for (int x = xmin; x <= xmax; x++) {
                 if(ff0 >= 0 && ff1 >=0 && ff2 >= 0) {
                     // interpolate color
-                    auto pixel = ff0/c * p0_pix + ff1/c * p1_pix + ff2/c * p2_pix;
-                    SetPixel(x, y, pixel);
+                    auto Color = ff0/c * p0_color + ff1/c * p1_color + ff2/c * p2_color;
+                    SetColor(x, y, Color);
                 }
                 
                 ff0 = ff0 + (y0-y1);
@@ -604,17 +602,18 @@ void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
     }
 }
 
-void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pixel& pix) {
-    DrawPoints(vertices, Pixel(0, 255, 255));
+void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Color& color) {
+    DrawPoints(vertices, Color(0, 255, 255));
 
     if (vertices.size() >= 3) {
         // clear drawing area
-        ClearPixelData();
+        ClearColorData();
 
         // fill polygon
 
         // passive edge struct
         struct PassiveEdge {
+            Point2D p0, p1;
             int x0, y0;
             int x1, y1;
 
@@ -623,13 +622,16 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pix
 
                 x0 = static_cast<int>(first.x);
                 y0 = static_cast<int>(first.y);
+                p0 = first;
 
                 x1 = static_cast<int>(second.x);
                 y1 = static_cast<int>(second.y);
+                p1 = second;
 
                 if (!Point2D::less_y(first, second)) {
                     std::swap(x0, x1);
                     std::swap(y0, y1);
+                    std::swap(p0, p1);
                 }
             }
         };
@@ -704,7 +706,7 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pix
                     ++iter;
             }
 
-            // set pixel within the spans of actives xs
+            // set Color within the spans of actives xs
             assert(actives.size() % 2 == 0);
             for (auto first_it = actives.cbegin(); first_it != actives.cend(); ++++first_it) {
                 auto second_it = first_it;
@@ -714,7 +716,7 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pix
                 auto& intersect2 = second_it->xs;
 
                 for (auto x = intersect1; x < intersect2; ++x)
-                    SetPixel(x, y, Pixel(0, 100, 100));
+                    SetColor(x, y, Color(0, 100, 100));
             }
 
             // increment all xs with dx (of active edges)
@@ -727,7 +729,7 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pix
 
         // draw all edges
         for (auto& edge : edges)
-            DrawLineBresenham(edge.x0, edge.y0, edge.x1, edge.y1, Pixel(0, 255, 255));
+            DrawLineBresenham(edge.p0, edge.p1, Color(0, 255, 255));
     }
 }
 
@@ -741,7 +743,7 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
 
     switch (key) {
     case Key::C:
-        ClearPixelData();
+        ClearColorData();
         
         // clear support points
         _bezier_points.clear();
@@ -779,17 +781,19 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
 }
 
 void DrawingAlgoApp::OnMouseButtonPressed(sf::Mouse::Button button, int x, int y) {
-    _mouse_pos_cache.x = x;
-    _mouse_pos_cache.y = y;
+    _mouse_pos_cache.x = static_cast<float>(x);
+    _mouse_pos_cache.y = static_cast<float>(y);
 }
 
 void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int y) {
     auto& cachex = _mouse_pos_cache.x;
     auto& cachey = _mouse_pos_cache.y;
 
+    auto current_pos = Point2D(x, y);
+
     switch (_draw_type) {
     case DrawingType::Line:
-        DrawLineBresenham(cachex, cachey, x, y);
+        DrawLineBresenham(_mouse_pos_cache, current_pos);
         break;
     case DrawingType::Circle:
         {
@@ -798,32 +802,32 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
             auto dy = cachey - y;
             auto radius = std::sqrt(dx*dx + dy*dy);
 
-            DrawCircle(cachex, cachey, static_cast<int>(radius));
+            DrawCircle(_mouse_pos_cache, static_cast<int>(radius));
         }
         break;
     case DrawingType::Bezier:
         // add point to support_points!
-        _bezier_points.push_back(Point2D(cachex, cachey));
+        _bezier_points.push_back(_mouse_pos_cache);
 
-        // clear pixeldata
-        ClearPixelData();
+        // clear Colordata
+        ClearColorData();
 
         // render bezier
         DrawBezier(_bezier_points);
         break;
     case DrawingType::BSpline:
         // add point to support_points!
-        _bspline_points.push_back(Point2D(cachex, cachey));
+        _bspline_points.push_back(_mouse_pos_cache);
         updateConfigData();
 
-        // clear pixeldata
-        ClearPixelData();
+        // clear Colordata
+        ClearColorData();
 
         // render bezier
         DrawBSpline(_bspline_points, _bspline_knot_vector);
         break;
     case DrawingType::FillRectangle:
-        FillRectangle(cachex, cachey, x, y);
+        FillRectangle(_mouse_pos_cache, current_pos);
         break;
     case DrawingType::FillTriangle:
         _vertices.emplace_back(x, y);
@@ -831,7 +835,7 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
         break;
     case DrawingType::FillPolygon:
         _vertices.emplace_back(x, y);
-        FillPolygon(_vertices, Pixel(0x00FFFF));
+        FillPolygon(_vertices, Color(0x00FFFF));
         break;
     }
 }
