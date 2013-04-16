@@ -605,7 +605,7 @@ void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
 }
 
 void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pixel& pix) {
-    DrawPoints(vertices, pix);
+    DrawPoints(vertices, Pixel(0, 255, 255));
 
     if (vertices.size() >= 3) {
         // clear drawing area
@@ -669,9 +669,7 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pix
             passives.emplace(first, second);
         }
 
-        // draw all edges
-        for (auto& edge : passives)
-            DrawLineBresenham(edge.x0, edge.y0, edge.x1, edge.y1, Pixel(0xFF00FF));
+        auto edges = passives;
 
         // lesser compare for Point2Ds y-values
         auto miny = static_cast<int>(std::min_element(_vertices.cbegin(), _vertices.cend(), Point2D::less_y)->y);
@@ -716,7 +714,7 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pix
                 auto& intersect2 = second_it->xs;
 
                 for (auto x = intersect1; x < intersect2; ++x)
-                    SetPixel(x, y, Pixel(0xFF00FF));
+                    SetPixel(x, y, Pixel(0, 100, 100));
             }
 
             // increment all xs with dx (of active edges)
@@ -726,6 +724,10 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Pix
             }
             actives = ac_cpy;
         }
+
+        // draw all edges
+        for (auto& edge : edges)
+            DrawLineBresenham(edge.x0, edge.y0, edge.x1, edge.y1, Pixel(0, 255, 255));
     }
 }
 
