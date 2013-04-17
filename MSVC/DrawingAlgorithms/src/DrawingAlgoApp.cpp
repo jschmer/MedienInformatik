@@ -609,8 +609,6 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
         // clear drawing area
         ClearColorData();
 
-        // fill polygon
-
         // passive edge struct
         struct PassiveEdge {
             Point2D p0, p1;
@@ -659,16 +657,12 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
 
         // adding all edges to passives set
         std::multiset<PassiveEdge, less_passive_edge> passives;
-        std::multiset<ActiveEdge, less_active_edge>  actives;
         for (auto first_it = _vertices.cbegin(), second_it = _vertices.cbegin()+1; first_it != _vertices.cend(); ++first_it, ++second_it) {
             // last vertex is the first one to close the polygon (last edge should close the polygon)
             if (second_it == _vertices.cend())
                 second_it = _vertices.cbegin();
 
-            auto& first  = *first_it;
-            auto& second = *second_it;
-
-            passives.emplace(first, second);
+            passives.emplace(*first_it, *second_it);
         }
 
         auto edges = passives;
@@ -677,6 +671,7 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
         auto miny = static_cast<int>(std::min_element(_vertices.cbegin(), _vertices.cend(), Point2D::less_y)->y);
         auto maxy = static_cast<int>(std::max_element(_vertices.cbegin(), _vertices.cend(), Point2D::less_y)->y);
 
+        std::vector<ActiveEdge> actives;
         for (auto y = miny; y <= maxy; ++y) {
             // push all passive edges with ymin == y into actives set
             for (auto iter = passives.begin(); iter != passives.end(); ) {
@@ -688,7 +683,7 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
                     auto ymax  = std::max(passive_edge.y0, passive_edge.y1);
                     auto dx    = (passive_edge.x1 - passive_edge.x0) / (float)(passive_edge.y1 - passive_edge.y0);
 
-                    actives.emplace(xs, dx, ymax);
+                    actives.emplace_back(xs, dx, ymax);
                     passives.erase(iter++); // pass old iterator to erase but jump one further before!
                 }
                 else {
@@ -696,21 +691,14 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
                 }
             }
                 
-            // erase all edges with ymax == y from actives
-            for (auto iter = actives.begin(); iter != actives.end(); ) {
-                const auto& active_edge = *iter;
-
-                if (active_edge.ymax == y)
-                    actives.erase(iter++); // pass old iterator to erase but jump one further before!
-                else
-                    ++iter;
-            }
+            std::remove_if(actives.begin(), actives.end(), [&y](ActiveEdge e1) {
+                return e1.ymax == y ? true : false;
+            });
 
             // set Color within the spans of actives xs
             assert(actives.size() % 2 == 0);
             for (auto first_it = actives.cbegin(); first_it != actives.cend(); ++++first_it) {
-                auto second_it = first_it;
-                ++second_it;
+                auto second_it = first_it + 1;
 
                 auto& intersect1 = first_it->xs;
                 auto& intersect2 = second_it->xs;
@@ -720,11 +708,10 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
             }
 
             // increment all xs with dx (of active edges)
-            decltype(actives) ac_cpy; // need a copy because all elements in a multiset are const...
-            for (const auto& edge : actives) {
-                ac_cpy.emplace(edge.xs + edge.dx, edge.dx, edge.ymax);
-            }
-            actives = ac_cpy;
+            for (auto& edge : actives)
+                edge.xs += edge.dx;
+
+            std::sort(actives.begin(), actives.end(), less_active_edge());
         }
 
         // draw all edges
