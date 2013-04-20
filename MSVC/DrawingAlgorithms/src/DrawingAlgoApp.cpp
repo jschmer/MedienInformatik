@@ -691,13 +691,24 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
                 }
             }
                 
-            std::remove_if(actives.begin(), actives.end(), [&y](ActiveEdge e1) {
-                return e1.ymax == y ? true : false;
-            });
+            //std::remove_if(actives.begin(), actives.end(), [&y](ActiveEdge e1) {
+            //    return e1.ymax == y ? true : false;
+            //});
+
+            // erase all edges with ymax == y from actives
+            for (auto iter = actives.begin(); iter != actives.end(); ) {
+                const auto& active_edge = *iter;
+
+                if (active_edge.ymax == y)
+                    iter = actives.erase(iter); // pass old iterator to erase but jump one further before!
+                else
+                    ++iter;
+            }
 
             // set Color within the spans of actives xs
             assert(actives.size() % 2 == 0);
             for (auto first_it = actives.cbegin(); first_it != actives.cend(); ++++first_it) {
+
                 auto second_it = first_it + 1;
 
                 auto& intersect1 = first_it->xs;
