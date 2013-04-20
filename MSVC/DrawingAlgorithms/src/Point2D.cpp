@@ -34,11 +34,27 @@ const Point2D operator*(const float& lhs, const Point2D& rhs)
   return tmp;
 }
 
+const Point2D operator*(const Point2D& lhs, const float& rhs)
+{
+  /* Erzeugen eines neuen Objektes, dessen Attribute gezielt einzeln gesetzt werden. Oder: */
+  Point2D tmp(lhs); //Kopie des linken Operanden
+  tmp *= rhs;
+  return tmp;
+}
+
 const Point2D operator+(const Point2D& lhs, const Point2D& rhs)
 {
   /* Erzeugen eines neuen Objektes, dessen Attribute gezielt einzeln gesetzt werden. Oder: */
   Point2D tmp(lhs); //Kopie des linken Operanden
   tmp += rhs;
+  return tmp;
+}
+
+const Point2D operator-(const Point2D& lhs, const Point2D& rhs)
+{
+  /* Erzeugen eines neuen Objektes, dessen Attribute gezielt einzeln gesetzt werden. Oder: */
+  Point2D tmp(lhs); //Kopie des linken Operanden
+  tmp -= rhs;
   return tmp;
 }
 
@@ -57,3 +73,17 @@ Point2D& Point2D::operator+=(const Point2D& rhs)
     y += rhs.y;
     return *this;
 }
+
+Point2D& Point2D::operator-=(const Point2D& rhs)
+{
+    x -= rhs.x;
+    y -= rhs.y;
+    return *this;
+}
+
+Point2D Point2D::operator-() const {
+      Point2D tmp;
+      tmp.x = -x;
+      tmp.y = -y;
+      return tmp;
+   }

@@ -93,14 +93,14 @@ DrawingAlgoApp::DrawingAlgoApp()
             ClearColorData();
 
             // render bezier
-            DrawBezier(_bezier_points);
+            DrawBezier(_control_points);
             break;
         case DrawingType::BSpline:
             // clear Colordata
             ClearColorData();
 
             // render bezier
-            DrawBSpline(_bspline_points, _bspline_knot_vector);
+            DrawBSpline(_control_points, _bspline_knot_vector);
             break;
         }
     });
@@ -127,9 +127,10 @@ Modes:
 3 = Circle
 4 = Bezier
 5 = B-Spline
-6 = Fill Rectangle
-7 = Fill Triangle
-8 = Fill Polygon
+6 = Catmul-Rom-Spline
+7 = Fill Rectangle
+8 = Fill Triangle
+9 = Fill Polygon
 )";
 
     auto help = _help_text.getString();
@@ -165,9 +166,9 @@ void DrawingAlgoApp::updateConfigData() {
         auto poly_deg_tmp = std::stoi(bspline_degree);
         auto num_supp_points_tmp = std::stoi(num_supp_points);
 
-        if (_bspline_poly_degree != poly_deg_tmp || _bspline_points.size() != num_supp_points_tmp) {
+        if (_bspline_poly_degree != poly_deg_tmp || _control_points.size() != num_supp_points_tmp) {
             // TODO: recalc knot vector and print out to config file
-            auto new_knot_vec_len = _bspline_points.size() + poly_deg_tmp + 1;
+            auto new_knot_vec_len = _control_points.size() + poly_deg_tmp + 1;
             std::string knot_vec_str = "";
 
             if (new_knot_vec_len >= 2U * (poly_deg_tmp + 1U)) {
@@ -201,7 +202,7 @@ void DrawingAlgoApp::updateConfigData() {
             else {
                 // B-Spline not possible with this configuration
 
-                auto supp_points = _bspline_points.size();
+                auto supp_points = _control_points.size();
                 // print "not possible with # support points"
                 // to knot_vec config property
 
@@ -209,7 +210,7 @@ void DrawingAlgoApp::updateConfigData() {
             }
 
             _bspline_poly_degree = poly_deg_tmp;
-            _config.put("B-Spline", "num_support_points", std::to_string(_bspline_points.size()));
+            _config.put("B-Spline", "num_support_points", std::to_string(_control_points.size()));
             _config.put("B-Spline", "knot_vec", knot_vec_str);
         }
         else {
@@ -514,6 +515,45 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     }
 }
 
+void DrawingAlgoApp::DrawCatmulRomSpline(const std::vector<Point2D>& control_points) {
+    const auto num_control_points = control_points.size();
+
+    // render control points in red
+    DrawPoints(control_points, Color(0xFF0000));
+
+    if (num_control_points >= 4) {
+        // render the curve!
+
+        std::vector<Point2D> points;
+        for (float t = .0f; t <= 1.f + _delta_t/2.f; t += _delta_t) {
+            float t2 = t * t;
+            float t3 = t2 * t;
+
+            auto p0 = control_points[0];
+            auto p1 = control_points[1];
+            auto p2 = control_points[2];
+            auto p3 = control_points[3];
+            
+            auto out = 0.5f * ( ( 2.0f * p1 ) +
+                        ( -p0 + p2 ) * t +
+                        ( 2.0f * p0 - 5.0f * p1 + 4 * p2 - p3 ) * t2 +
+                        ( -p0 + 3.0f * p1 - 3.0f * p2 + p3 ) * t3 );
+
+            points.emplace_back(out);
+        }
+
+        // render curve
+        auto p0 = *points.cbegin();
+        for (auto it = points.cbegin() + 1; it != points.cend(); ++it) {
+            auto& p1 = *it;
+
+            DrawLineBresenham(p0, p1, Color(0xFFFF00));
+
+            p0 = p1;
+        }
+    }
+}
+
 void DrawingAlgoApp::FillRectangle(const Point2D p0, const Point2D p1) {
     // get bounding box
     auto xmin = std::min(p0.x, p1.x);
@@ -744,8 +784,8 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         ClearColorData();
         
         // clear support points
-        _bezier_points.clear();
-        _bspline_points.clear();
+        _control_points.clear();
+        _control_points.clear();
         _vertices.clear();
         break;
     case Key::X:
@@ -767,12 +807,15 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         _draw_type = DrawingType::BSpline;
         break;
     case Key::Num6:
-        _draw_type = DrawingType::FillRectangle;
+        _draw_type = DrawingType::CatmulRomSpline;
         break;
     case Key::Num7:
-        _draw_type = DrawingType::FillTriangle;
+        _draw_type = DrawingType::FillRectangle;
         break;
     case Key::Num8:
+        _draw_type = DrawingType::FillTriangle;
+        break;
+    case Key::Num9:
         _draw_type = DrawingType::FillPolygon;
         break;
     }
@@ -805,24 +848,34 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
         break;
     case DrawingType::Bezier:
         // add point to support_points!
-        _bezier_points.push_back(_mouse_pos_cache);
+        _control_points.push_back(_mouse_pos_cache);
 
         // clear Colordata
         ClearColorData();
 
         // render bezier
-        DrawBezier(_bezier_points);
+        DrawBezier(_control_points);
         break;
     case DrawingType::BSpline:
         // add point to support_points!
-        _bspline_points.push_back(_mouse_pos_cache);
+        _control_points.push_back(_mouse_pos_cache);
         updateConfigData();
 
         // clear Colordata
         ClearColorData();
 
         // render bezier
-        DrawBSpline(_bspline_points, _bspline_knot_vector);
+        DrawBSpline(_control_points, _bspline_knot_vector);
+        break;
+    case DrawingType::CatmulRomSpline:
+        // add point to support_points!
+        _control_points.push_back(_mouse_pos_cache);
+
+        // clear Colordata
+        ClearColorData();
+
+        // render bezier
+        DrawCatmulRomSpline(_control_points);
         break;
     case DrawingType::FillRectangle:
         FillRectangle(_mouse_pos_cache, current_pos);

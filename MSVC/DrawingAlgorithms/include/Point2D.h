@@ -12,9 +12,13 @@ struct Point2D {
 
     Point2D& operator*=(const float& factor);
     Point2D& operator+=(const Point2D& rhs);
+    Point2D& operator-=(const Point2D& rhs);
+    Point2D operator-() const;
 
     static std::function<bool(Point2D, Point2D)> less_y;
 };
 
 const Point2D operator*(const float& lhs, const Point2D& rhs);
+const Point2D operator*(const Point2D& lhs, const float& rhs);
 const Point2D operator+(const Point2D& lhs, const Point2D& rhs);
+const Point2D operator-(const Point2D& lhs, const Point2D& rhs);

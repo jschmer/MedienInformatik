@@ -32,6 +32,7 @@ class DrawingAlgoApp : public SFMLApp {
         Circle,
         Bezier,
         BSpline,
+        CatmulRomSpline,
         FillRectangle,
         FillTriangle,
         FillPolygon
@@ -79,6 +80,7 @@ private:
     void DrawCircle(const Point2D center, uint radius, const Color& color = Color(0, 255, 0));
     void DrawBezier(const std::vector<Point2D>& support_points);
     void DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> _knot_vector);
+    void DrawCatmulRomSpline(const std::vector<Point2D>& support_points);
 
     void FillRectangle(const Point2D p0, const Point2D p1);
     void FillTriangle(std::vector<Point2D>& vertices);
@@ -89,9 +91,7 @@ private:
 private:
     std::vector<Point2D> _vertices;
 
-    std::vector<Point2D> _bezier_points;
-
-    std::vector<Point2D> _bspline_points;
+    std::vector<Point2D> _control_points;
     std::vector<float>   _bspline_knot_vector;
     int                  _bspline_poly_degree;
 
