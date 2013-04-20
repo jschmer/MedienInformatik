@@ -334,6 +334,9 @@ void DrawingAlgoApp::DrawLineBresenham(const Point2D p0, const Point2D p1, const
     // Fehlervariable initialisieren
     int error = errLR - num_elements;
 
+    // HACK! set always the start pixel (the algorithm wouldn't set the pixel if start and end point are the same)
+    SetColor(x, y, color);
+
     for (int i = 0; i < num_elements; ++i) {
         SetColor(x, y, color);
         
@@ -515,31 +518,48 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     }
 }
 
-void DrawingAlgoApp::DrawCatmulRomSpline(const std::vector<Point2D>& control_points) {
-    const auto num_control_points = control_points.size();
+void DrawingAlgoApp::DrawCatmulRomSpline(const std::vector<Point2D>& input_control_points) { 
+    auto num_control_points = input_control_points.size();
+
+    std::vector<Point2D> control_points;
 
     // render control points in red
-    DrawPoints(control_points, Color(0xFF0000));
+    DrawPoints(input_control_points, Color(0xFF0000));
 
-    if (num_control_points >= 4) {
+    if (num_control_points >= 2) {
         // render the curve!
 
+        // add one additional point at the beginning of the control_points
+        auto p_begin = input_control_points[0] - input_control_points[1];
+        p_begin = input_control_points[0] + p_begin;
+
+        // add one additional point at the end of the control_points
+        auto p_end = *(input_control_points.end()-1) - *(input_control_points.end()-2);
+        p_end = *(input_control_points.end()-1) + p_end;
+
+        control_points.push_back(p_begin);
+        control_points.insert(control_points.end(), input_control_points.begin(), input_control_points.end());
+        control_points.push_back(p_end);
+        num_control_points += 2;
+
         std::vector<Point2D> points;
-        for (float t = .0f; t <= 1.f + _delta_t/2.f; t += _delta_t) {
-            float t2 = t * t;
-            float t3 = t2 * t;
+        for (int i = 0; i < num_control_points - 3; ++i) {
+            for (float t = .0f; t <= 1.f + _delta_t/2.f; t += _delta_t) {
+                float t2 = t * t;
+                float t3 = t2 * t;
 
-            auto p0 = control_points[0];
-            auto p1 = control_points[1];
-            auto p2 = control_points[2];
-            auto p3 = control_points[3];
+                auto p0 = control_points[i];
+                auto p1 = control_points[i+1];
+                auto p2 = control_points[i+2];
+                auto p3 = control_points[i+3];
             
-            auto out = 0.5f * ( ( 2.0f * p1 ) +
-                        ( -p0 + p2 ) * t +
-                        ( 2.0f * p0 - 5.0f * p1 + 4 * p2 - p3 ) * t2 +
-                        ( -p0 + 3.0f * p1 - 3.0f * p2 + p3 ) * t3 );
+                auto out = 0.5f * ( ( 2.0f * p1 ) +
+                            ( -p0 + p2 ) * t +
+                            ( 2.0f * p0 - 5.0f * p1 + 4 * p2 - p3 ) * t2 +
+                            ( -p0 + 3.0f * p1 - 3.0f * p2 + p3 ) * t3 );
 
-            points.emplace_back(out);
+                points.emplace_back(out);
+            }
         }
 
         // render curve
