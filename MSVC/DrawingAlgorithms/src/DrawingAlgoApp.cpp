@@ -10,7 +10,9 @@
 using std::string;
 using std::ostringstream;
 
+#include <glm/gtx/transform.hpp>
 #include <SFML/OpenGL.hpp>
+#include <2d_transforms.h>
 
 #include <boost/heap/fibonacci_heap.hpp>
 
@@ -73,7 +75,8 @@ DrawingAlgoApp::DrawingAlgoApp()
     _num_Colors(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
-    _config("DrawingAlgoApp.cfg")
+    _config("DrawingAlgoApp.cfg"),
+    _transform_vec(1.0f)
 {
     _Color_data.reset(new Color[_width*_height]);
 
@@ -105,6 +108,19 @@ DrawingAlgoApp::DrawingAlgoApp()
         }
     });
     _config.monitorChanges();
+
+    // debug test stuff
+    using glm::vec2;
+    using glm::vec3;
+    using glm::mat3;
+
+    // column-major! rightmost transformation comes first!
+    _transform_vec = translate(vec2(2, 1));
+    _transform_vec = scale(1.5f, 2) * _transform_vec;
+    _transform_vec = rotate(glm::radians(90.0f)) * _transform_vec;
+
+    Point2D p(0, 0);
+    auto transPoint = _transform_vec * p;
 }
 
 DrawingAlgoApp::~DrawingAlgoApp()

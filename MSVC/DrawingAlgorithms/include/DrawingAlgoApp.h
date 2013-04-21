@@ -1,10 +1,13 @@
-#include <SFMLApp.h>
+#pragma once
 
 #include <memory>
 
+#include <glm/glm.hpp>
+
+#include <SFMLApp.h>
+
 #include <Point2D.h>
 #include <Config/ConfigFile.h>
-
 
 struct Color {
     BYTE R;
@@ -99,6 +102,8 @@ private:
     DrawingType  _draw_type;
     const uint   _num_Colors;
     std::unique_ptr<Color[]> _Color_data; // _width * _height Colors
+
+    glm::mat3 _transform_vec;
 
 private:
     ConfigFile _config;

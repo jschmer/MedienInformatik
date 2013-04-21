@@ -32,5 +32,8 @@
     <ClInclude Include="include\Point2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\2d_transforms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

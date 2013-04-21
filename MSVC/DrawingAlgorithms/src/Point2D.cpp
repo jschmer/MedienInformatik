@@ -12,16 +12,20 @@ Point2D::Point2D()
     : x(0U), y(0U)
 {}
 
-Point2D::Point2D(const float x, const float y)
-    : x(x), y(y)
+Point2D::Point2D(float x, float y, float w)
+    : x(x), y(y), w(w)
 {}
 
-Point2D::Point2D(const int x, const int y)
-    : x(static_cast<float>(x)), y(static_cast<float>(y))
+Point2D::Point2D(int x, int y, int w)
+    : x(static_cast<float>(x)), y(static_cast<float>(y)), w(static_cast<float>(w))
 {}
 
 Point2D::Point2D(sf::Vector2f v)
     :  x(static_cast<float>(v.x)), y(static_cast<float>(v.y))
+{}
+
+Point2D::Point2D(glm::vec3 v)
+    :  x(static_cast<float>(v.x)), y(static_cast<float>(v.y)), w(static_cast<float>(v.z))
 {}
 
 //
@@ -40,6 +44,18 @@ const Point2D operator*(const Point2D& lhs, const float& rhs)
   Point2D tmp(lhs); //Kopie des linken Operanden
   tmp *= rhs;
   return tmp;
+}
+
+const Point2D operator*(const glm::mat3& lhs, const Point2D& rhs)
+{
+    glm::vec3 tmp;
+    tmp.x = rhs.x;
+    tmp.y = rhs.y;
+    tmp.z = rhs.w;
+
+    tmp = lhs * tmp;
+
+    return tmp;
 }
 
 const Point2D operator+(const Point2D& lhs, const Point2D& rhs)
