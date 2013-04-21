@@ -1048,6 +1048,7 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
     
     if (_transform_type == TransformationType::SetOrigin) {
         _transform_origin = Point2D(x, y);
+        _transform_type = TransformationType::None;
     }
     else {
         _vertices.emplace_back(x, y);
