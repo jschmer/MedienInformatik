@@ -37,8 +37,10 @@ You need to build 'SFMLApp' before building this project!
     * Click to set vertices
     
 ### Transformations
+* Set Origin
+    * transformations will be relative to this origin
 * Translate
 * Scale
-    * Relative to origin (0,0) left upper corner
+    * Relative to specified origin
 * Rotate
-    * Relative to origin (0,0)
+    * Relative to specified origin
