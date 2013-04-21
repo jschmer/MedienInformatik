@@ -18,6 +18,7 @@ struct Point2D {
     Point2D& operator+=(const Point2D& rhs);
     Point2D& operator-=(const Point2D& rhs);
     Point2D operator-() const;
+    operator glm::vec2(void) const; 
 
     static std::function<bool(Point2D, Point2D)> less_y;
 };

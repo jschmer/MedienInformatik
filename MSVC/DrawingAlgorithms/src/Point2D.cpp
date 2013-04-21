@@ -98,8 +98,12 @@ Point2D& Point2D::operator-=(const Point2D& rhs)
 }
 
 Point2D Point2D::operator-() const {
-      Point2D tmp;
-      tmp.x = -x;
-      tmp.y = -y;
-      return tmp;
-   }
+    Point2D tmp;
+    tmp.x = -x;
+    tmp.y = -y;
+    return tmp;
+}
+
+Point2D::operator glm::vec2(void) const {
+    return glm::vec2(x, y);
+}

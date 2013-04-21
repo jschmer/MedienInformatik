@@ -46,7 +46,8 @@ class DrawingAlgoApp : public SFMLApp {
         Translate,
         Scale,
         Rotate,
-        Shear
+        Shear,
+        SetOrigin
     };
 
     // DrawingAlgoApp declaration
@@ -59,6 +60,7 @@ public:
 protected:
     bool OnInit() override;
     void OnRender() override;
+    void RenderCurrentMode();
 
     //
     // event handler
@@ -113,9 +115,12 @@ private:
     std::unique_ptr<Color[]> _Color_data; // _width * _height Colors
 
     glm::mat3          _transform_vec;
+    Point2D            _transform_origin;
     TransformationType _transform_type;
 
 private:
     ConfigFile _config;
     float      _delta_t;
+    sf::Text   _current_mode_text;
+    bool       _show_current_mode;
 };

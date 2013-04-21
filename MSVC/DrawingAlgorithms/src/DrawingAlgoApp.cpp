@@ -77,8 +77,12 @@ DrawingAlgoApp::DrawingAlgoApp()
     _mouse_pos_cache(0, 0),
     _config("DrawingAlgoApp.cfg"),
     _transform_vec(1.0f),
-    _transform_type(TransformationType::None)
+    _transform_type(TransformationType::None),
+    _transform_origin(0, 0),
+    _show_current_mode(true)
 {
+    _current_mode_text = sf::Text("", sf::Font(), 15u);
+
     _Color_data.reset(new Color[_width*_height]);
 
     ClearColorData();
@@ -120,6 +124,7 @@ bool DrawingAlgoApp::OnInit() {
 
     // adjusting help text
     const auto append_text = R"(
+V = Show Current Mode
 C = Clear Colorbuffer
 X = Capture Screen
 
@@ -141,11 +146,14 @@ W = Translate
 E = Scale
 R = Rotate
 T = Shear
+Z = Set Transformation Origin
 )";
 
     auto help = _help_text.getString();
     help.insert(help.getSize(), append_text);
     _help_text.setString(help);
+
+    _current_mode_text.setFont(_font);
 
     // Set the screen color for clearing
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // rgba
@@ -161,6 +169,78 @@ void DrawingAlgoApp::OnRender() {
     Super::RenderHelpText();
     Super::RenderFPS();
     Super::RenderMousePos();
+    RenderCurrentMode();
+}
+
+void DrawingAlgoApp::RenderCurrentMode() {
+    std::string title("Current Mode: ");
+
+    switch (_draw_type) {
+    case DrawingType::None:
+        title += "None";
+        break;
+    case DrawingType::Bezier:
+        title += "Bezier";
+        break;
+    case DrawingType::BSpline:
+        title += "B-Spline";
+        break;
+    case DrawingType::CatmulRomSpline:
+        title += "Catmull-Rom Spline";
+        break;
+    case DrawingType::Circle:
+        title += "Circle";
+        break;
+    case DrawingType::FillPolygon:
+        title += "Fill Polygon";
+        break;
+    case DrawingType::FillRectangle:
+        title += "Fill Rectangle";
+        break;
+    case DrawingType::FillTriangle:
+        title += "Fill Triangle";
+        break;
+    case DrawingType::Line:
+        title += "Line";
+        break;
+    }
+
+    title += " | ";
+
+    switch (_transform_type) {
+    case TransformationType::None:
+        title += "None";
+        break;
+    case TransformationType::Rotate:
+        title += "Rotate";
+        break;
+    case TransformationType::Scale:
+        title += "Scale";
+        break;
+    case TransformationType::SetOrigin:
+        title += "Set Origin";
+        break;
+    case TransformationType::Shear:
+        title += "Shear";
+        break;
+    case TransformationType::Translate:
+        title += "Translate";
+        break;
+    }
+
+    // convert to sf::String
+    sf::String current_mode_str(title);
+
+    // generate a SFML text for rendering
+    _current_mode_text.setString(current_mode_str);
+    _current_mode_text.setPosition(4, static_cast<float>(_window.getSize().y - 60u));
+
+    if (_show_current_mode) {
+        // draw the mouse position text
+        _window.pushGLStates();
+        _window.draw(_current_mode_text);
+        _window.popGLStates();
+    }
 }
 
 //
@@ -807,6 +887,9 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
     float d_scale = .05f;
     float d_rotate = 2.f;
 
+    // translate to origin
+    _transform_vec = translate(-_transform_origin) * _transform_vec;
+
     switch (key) {
     // Transformations control
     case Key::Left:
@@ -869,6 +952,9 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
         break;
     }
 
+    // translate back
+    _transform_vec = translate(_transform_origin) * _transform_vec;
+
     DrawCurrentMode();
 }
 
@@ -887,6 +973,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         break;
     case Key::X:
         SaveAsPPM();
+        break;
+    case Key::V:
+        _show_current_mode = !_show_current_mode;
         break;
     case Key::Num1:
         _draw_type = DrawingType::None;
@@ -932,6 +1021,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
     case Key::T:
         _transform_type = TransformationType::Shear;
         break;
+    case Key::Z:
+        _transform_type = TransformationType::SetOrigin;
+        break;
     }
 
     DrawCurrentMode();
@@ -953,19 +1045,31 @@ void DrawingAlgoApp::OnMouseButtonPressed(sf::Mouse::Button button, int x, int y
 }
 
 void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int y) {
-    _vertices.emplace_back(x, y);
+    
+    if (_transform_type == TransformationType::SetOrigin) {
+        _transform_origin = Point2D(x, y);
+    }
+    else {
+        _vertices.emplace_back(x, y);
 
-    // update config for B-spline mode!
-    switch (_draw_type) {
-     case DrawingType::BSpline:
-        updateConfigData();
-        break;
+        switch (_draw_type) {
+         // update config for B-spline mode!
+         case DrawingType::BSpline:
+            updateConfigData();
+            break;
+        }
     }
 
     DrawCurrentMode();
 }
 
 void DrawingAlgoApp::DrawCurrentMode() {
+    // clear pixel buffer
+    ClearColorData();
+    
+    // draw transformation origin
+    DrawCircle(_transform_origin, 1, Color(0xFFFFFF));
+
     // apply transformation to all vertices
     auto _transformed_vertices = _vertices;
     for (auto& vtx : _transformed_vertices)
@@ -973,7 +1077,7 @@ void DrawingAlgoApp::DrawCurrentMode() {
     
     auto& vertices = _transformed_vertices;
 
-    ClearColorData();
+    
     switch (_draw_type) {
     case DrawingType::Line:
         // draw every vertex pair
