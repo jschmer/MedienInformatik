@@ -76,7 +76,8 @@ DrawingAlgoApp::DrawingAlgoApp()
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
     _config("DrawingAlgoApp.cfg"),
-    _transform_vec(1.0f)
+    _transform_vec(1.0f),
+    _transform_type(TransformationType::None)
 {
     _Color_data.reset(new Color[_width*_height]);
 
@@ -90,22 +91,7 @@ DrawingAlgoApp::DrawingAlgoApp()
         cfg.enableCallback();
 
         // redraw curves with updated values
-        switch (_draw_type) {
-        case DrawingType::Bezier:
-            // clear Colordata
-            ClearColorData();
-
-            // render bezier
-            DrawBezier(_control_points);
-            break;
-        case DrawingType::BSpline:
-            // clear Colordata
-            ClearColorData();
-
-            // render bezier
-            DrawBSpline(_control_points, _bspline_knot_vector);
-            break;
-        }
+        DrawCurrentMode();
     });
     _config.monitorChanges();
 
@@ -115,12 +101,12 @@ DrawingAlgoApp::DrawingAlgoApp()
     using glm::mat3;
 
     // column-major! rightmost transformation comes first!
-    _transform_vec = translate(vec2(2, 1));
-    _transform_vec = scale(1.5f, 2) * _transform_vec;
-    _transform_vec = rotate(glm::radians(90.0f)) * _transform_vec;
+    //_transform_vec = translate(vec2(10, -5));
+    //_transform_vec = scale(1.5f, 2) * _transform_vec;
+    //_transform_vec = rotate(glm::radians(90.0f)) * _transform_vec;
 
-    Point2D p(0, 0);
-    auto transPoint = _transform_vec * p;
+    Point2D p(10, 2);
+    auto p1 = _transform_vec * p;
 }
 
 DrawingAlgoApp::~DrawingAlgoApp()
@@ -147,6 +133,14 @@ Modes:
 7 = Fill Rectangle
 8 = Fill Triangle
 9 = Fill Polygon
+
+Transformations:
+(control with Arrow Keys)
+Q = None
+W = Translate
+E = Scale
+R = Rotate
+T = Shear
 )";
 
     auto help = _help_text.getString();
@@ -182,9 +176,9 @@ void DrawingAlgoApp::updateConfigData() {
         auto poly_deg_tmp = std::stoi(bspline_degree);
         auto num_supp_points_tmp = std::stoi(num_supp_points);
 
-        if (_bspline_poly_degree != poly_deg_tmp || _control_points.size() != num_supp_points_tmp) {
+        if (_bspline_poly_degree != poly_deg_tmp || _vertices.size() != num_supp_points_tmp) {
             // TODO: recalc knot vector and print out to config file
-            auto new_knot_vec_len = _control_points.size() + poly_deg_tmp + 1;
+            auto new_knot_vec_len = _vertices.size() + poly_deg_tmp + 1;
             std::string knot_vec_str = "";
 
             if (new_knot_vec_len >= 2U * (poly_deg_tmp + 1U)) {
@@ -218,7 +212,7 @@ void DrawingAlgoApp::updateConfigData() {
             else {
                 // B-Spline not possible with this configuration
 
-                auto supp_points = _control_points.size();
+                auto supp_points = _vertices.size();
                 // print "not possible with # support points"
                 // to knot_vec config property
 
@@ -226,7 +220,7 @@ void DrawingAlgoApp::updateConfigData() {
             }
 
             _bspline_poly_degree = poly_deg_tmp;
-            _config.put("B-Spline", "num_support_points", std::to_string(_control_points.size()));
+            _config.put("B-Spline", "num_support_points", std::to_string(_vertices.size()));
             _config.put("B-Spline", "knot_vec", knot_vec_str);
         }
         else {
@@ -559,7 +553,7 @@ void DrawingAlgoApp::DrawCatmulRomSpline(const std::vector<Point2D>& input_contr
         num_control_points += 2;
 
         std::vector<Point2D> points;
-        for (int i = 0; i < num_control_points - 3; ++i) {
+        for (auto i = 0U; i < num_control_points - 3; ++i) {
             for (float t = .0f; t <= 1.f + _delta_t/2.f; t += _delta_t) {
                 float t2 = t * t;
                 float t3 = t2 * t;
@@ -620,61 +614,61 @@ void DrawingAlgoApp::FillRectangle(const Point2D p0, const Point2D p1) {
 void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
     DrawPoints(vertices, Color(0xFFFF00));
 
-    if (vertices.size() == 3) {
-        // clear drawing area
-        ClearColorData();
+    if (vertices.size() >= 3) {
+        for (auto i = 0U; i < vertices.size() - vertices.size() % 3; i += 3) {
+            auto& v0 = vertices[i];
+            auto& v1 = vertices[i+1];
+            auto& v2 = vertices[i+2];
 
-        using std::max;
-        using std::min;
+            using std::max;
+            using std::min;
 
-        // CCW - counter clockwise
-        auto x0 = static_cast<int>(vertices[0].x);
-        auto x1 = static_cast<int>(vertices[2].x);
-        auto x2 = static_cast<int>(vertices[1].x);
-        auto y0 = static_cast<int>(vertices[0].y);
-        auto y1 = static_cast<int>(vertices[2].y);
-        auto y2 = static_cast<int>(vertices[1].y);
+            // CCW - counter clockwise
+            auto x0 = static_cast<int>(v0.x);
+            auto x1 = static_cast<int>(v2.x);
+            auto x2 = static_cast<int>(v1.x);
+            auto y0 = static_cast<int>(v0.y);
+            auto y1 = static_cast<int>(v2.y);
+            auto y2 = static_cast<int>(v1.y);
 
-        auto p0_color = Color(0xFF0000);
-        auto p1_color = Color(0x00FF00);
-        auto p2_color = Color(0x0000FF);
+            auto p0_color = Color(0xFF0000);
+            auto p1_color = Color(0x00FF00);
+            auto p2_color = Color(0x0000FF);
 
-        // get bounding box
-        int xmin = min(x0, min(x1, x2));
-        int ymin = min(y0, min(y1, y2));
-        int xmax = max(x0, max(x1, x2));
-        int ymax = max(y0, max(y1 ,y2));
+            // get bounding box
+            int xmin = min(x0, min(x1, x2));
+            int ymin = min(y0, min(y1, y2));
+            int xmax = max(x0, max(x1, x2));
+            int ymax = max(y0, max(y1 ,y2));
         
-        int f0 = (y0 - y1)*(xmin - x0) + (x1 - x0)*(ymin - y0);
-        int f1 = (y1 - y2)*(xmin - x1) + (x2 - x1)*(ymin - y1);
-        int f2 = (y2 - y0)*(xmin - x2) + (x0 - x2)*(ymin - y2);
+            int f0 = (y0 - y1)*(xmin - x0) + (x1 - x0)*(ymin - y0);
+            int f1 = (y1 - y2)*(xmin - x1) + (x2 - x1)*(ymin - y1);
+            int f2 = (y2 - y0)*(xmin - x2) + (x0 - x2)*(ymin - y2);
 
-        // fill triangle
-        for (int y = ymin; y <= ymax; y++) {
-            int ff0 = f0;
-            int ff1 = f1;
-            int ff2 = f2;
-            float c = static_cast<float>(f0 + f1 + f2);
+            // fill triangle
+            for (int y = ymin; y <= ymax; y++) {
+                int ff0 = f0;
+                int ff1 = f1;
+                int ff2 = f2;
+                float c = static_cast<float>(f0 + f1 + f2);
             
-            for (int x = xmin; x <= xmax; x++) {
-                if(ff0 >= 0 && ff1 >=0 && ff2 >= 0) {
-                    // interpolate color
-                    auto Color = ff0/c * p0_color + ff1/c * p1_color + ff2/c * p2_color;
-                    SetColor(x, y, Color);
-                }
+                for (int x = xmin; x <= xmax; x++) {
+                    if(ff0 >= 0 && ff1 >=0 && ff2 >= 0) {
+                        // interpolate color
+                        auto Color = ff0/c * p0_color + ff1/c * p1_color + ff2/c * p2_color;
+                        SetColor(x, y, Color);
+                    }
                 
-                ff0 = ff0 + (y0-y1);
-                ff1 = ff1 + (y1-y2);
-                ff2 = ff2 + (y2-y0);
-            }
+                    ff0 = ff0 + (y0-y1);
+                    ff1 = ff1 + (y1-y2);
+                    ff2 = ff2 + (y2-y0);
+                }
             
-            f0 = f0 + (x1-x0);
-            f1 = f1 + (x2-x1);
-            f2 = f2 + (x0-x2);
+                f0 = f0 + (x1-x0);
+                f1 = f1 + (x2-x1);
+                f2 = f2 + (x0-x2);
+            }
         }
-
-        // clear vertices to be able to draw a new one
-        vertices.clear();
     }
 }
 
@@ -682,9 +676,6 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
     DrawPoints(vertices, Color(0, 255, 255));
 
     if (vertices.size() >= 3) {
-        // clear drawing area
-        ClearColorData();
-
         // passive edge struct
         struct PassiveEdge {
             Point2D p0, p1;
@@ -733,10 +724,10 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
 
         // adding all edges to passives set
         std::multiset<PassiveEdge, less_passive_edge> passives;
-        for (auto first_it = _vertices.cbegin(), second_it = _vertices.cbegin()+1; first_it != _vertices.cend(); ++first_it, ++second_it) {
+        for (auto first_it = vertices.cbegin(), second_it = vertices.cbegin()+1; first_it != vertices.cend(); ++first_it, ++second_it) {
             // last vertex is the first one to close the polygon (last edge should close the polygon)
-            if (second_it == _vertices.cend())
-                second_it = _vertices.cbegin();
+            if (second_it == vertices.cend())
+                second_it = vertices.cbegin();
 
             passives.emplace(*first_it, *second_it);
         }
@@ -744,8 +735,8 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
         auto edges = passives;
 
         // lesser compare for Point2Ds y-values
-        auto miny = static_cast<int>(std::min_element(_vertices.cbegin(), _vertices.cend(), Point2D::less_y)->y);
-        auto maxy = static_cast<int>(std::max_element(_vertices.cbegin(), _vertices.cend(), Point2D::less_y)->y);
+        auto miny = static_cast<int>(std::min_element(vertices.cbegin(), vertices.cend(), Point2D::less_y)->y);
+        auto maxy = static_cast<int>(std::max_element(vertices.cbegin(), vertices.cend(), Point2D::less_y)->y);
 
         std::vector<ActiveEdge> actives;
         for (auto y = miny; y <= maxy; ++y) {
@@ -809,19 +800,78 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
 
 //
 // event handler
+void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) {
+    typedef sf::Keyboard::Key Key;
+    
+    switch (key) {
+    // Transformations control
+    case Key::Left:
+        switch (_transform_type) {
+        case TransformationType::Translate:
+            _transform_vec = translate(glm::vec2(-1, 0)) * _transform_vec;
+            break;
+        case TransformationType::Scale:
+            break;
+        case TransformationType::Rotate:
+            break;
+        case TransformationType::Shear:
+            break;
+        }
+        break;
+    case Key::Right:
+        switch (_transform_type) {
+        case TransformationType::Translate:
+            _transform_vec = translate(glm::vec2(1, 0)) * _transform_vec;
+            break;
+        case TransformationType::Scale:
+            break;
+        case TransformationType::Rotate:
+            break;
+        case TransformationType::Shear:
+            break;
+        }
+        break;
+    case Key::Up:
+        switch (_transform_type) {
+        case TransformationType::Translate:
+            _transform_vec = translate(glm::vec2(0, -1)) * _transform_vec;
+            break;
+        case TransformationType::Scale:
+            break;
+        case TransformationType::Rotate:
+            break;
+        case TransformationType::Shear:
+            break;
+        }
+        break;
+    case Key::Down:
+        switch (_transform_type) {
+        case TransformationType::Translate:
+            _transform_vec = translate(glm::vec2(0, 1)) * _transform_vec;
+            break;
+        case TransformationType::Scale:
+            break;
+        case TransformationType::Rotate:
+            break;
+        case TransformationType::Shear:
+            break;
+        }
+        break;
+    }
+
+    DrawCurrentMode();
+}
+
 void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) {
     typedef sf::Keyboard::Key Key;
     
-    // key 'h' and 'f' are handled by SFMLApp
     Super::OnKeyReleased(key, ctrl, alt, shift, system);
 
     switch (key) {
     case Key::C:
         ClearColorData();
         
-        // clear support points
-        _control_points.clear();
-        _control_points.clear();
+        // clear vertices
         _vertices.clear();
         break;
     case Key::X:
@@ -841,6 +891,7 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         break;
     case Key::Num5:
         _draw_type = DrawingType::BSpline;
+        updateConfigData();
         break;
     case Key::Num6:
         _draw_type = DrawingType::CatmulRomSpline;
@@ -854,75 +905,112 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
     case Key::Num9:
         _draw_type = DrawingType::FillPolygon;
         break;
+    // Transformations selection
+    case Key::Q:
+        _transform_type = TransformationType::None;
+        break;
+    case Key::W:
+        _transform_type = TransformationType::Translate;
+        break;
+    case Key::E:
+        _transform_type = TransformationType::Scale;
+        break;
+    case Key::R:
+        _transform_type = TransformationType::Rotate;
+        break;
+    case Key::T:
+        _transform_type = TransformationType::Shear;
+        break;
     }
+
+    DrawCurrentMode();
 }
 
 void DrawingAlgoApp::OnMouseButtonPressed(sf::Mouse::Button button, int x, int y) {
+    
+    // add button down location to vertices
+    switch (_draw_type) {
+    case DrawingType::Line:
+    case DrawingType::Circle:
+    case DrawingType::FillRectangle:
+        _vertices.emplace_back(static_cast<float>(x), static_cast<float>(y));
+        break;
+    }
+    
     _mouse_pos_cache.x = static_cast<float>(x);
     _mouse_pos_cache.y = static_cast<float>(y);
 }
 
 void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int y) {
-    auto& cachex = _mouse_pos_cache.x;
-    auto& cachey = _mouse_pos_cache.y;
+    _vertices.emplace_back(x, y);
 
-    auto current_pos = Point2D(x, y);
+    // update config for B-spline mode!
+    switch (_draw_type) {
+     case DrawingType::BSpline:
+        updateConfigData();
+        break;
+    }
 
+    DrawCurrentMode();
+}
+
+void DrawingAlgoApp::DrawCurrentMode() {
+    // apply transformation to all vertices
+    auto _transformed_vertices = _vertices;
+    for (auto& vtx : _transformed_vertices)
+        vtx = _transform_vec * vtx;
+    
+    auto& vertices = _transformed_vertices;
+
+    ClearColorData();
     switch (_draw_type) {
     case DrawingType::Line:
-        DrawLineBresenham(_mouse_pos_cache, current_pos);
+        // draw every vertex pair
+        for (auto i = 0U; i < vertices.size(); i += 2) {
+            if (i+1 < vertices.size())
+                DrawLineBresenham(vertices[i], vertices[i+1]);
+        }
         break;
     case DrawingType::Circle:
         {
-            // calc distance between cache and current point
-            auto dx = cachex - x;
-            auto dy = cachey - y;
-            auto radius = std::sqrt(dx*dx + dy*dy);
+            // draw every vertex pair
+            for (auto i = 0U; i < vertices.size(); i += 2) {
+                if (i+1 < vertices.size()) {
+                    // calc distance between cache and current point
+                    auto dx = vertices[i].x - vertices[i+1].x;
+                    auto dy = vertices[i].y - vertices[i+1].y;
+                    auto radius = std::sqrt(dx*dx + dy*dy);
 
-            DrawCircle(_mouse_pos_cache, static_cast<int>(radius));
+                    DrawCircle(vertices[i], static_cast<int>(radius));
+                }
+            }
         }
         break;
     case DrawingType::Bezier:
-        // add point to support_points!
-        _control_points.push_back(_mouse_pos_cache);
-
-        // clear Colordata
-        ClearColorData();
-
         // render bezier
-        DrawBezier(_control_points);
+        DrawBezier(vertices);
         break;
     case DrawingType::BSpline:
-        // add point to support_points!
-        _control_points.push_back(_mouse_pos_cache);
-        updateConfigData();
-
-        // clear Colordata
-        ClearColorData();
-
         // render bezier
-        DrawBSpline(_control_points, _bspline_knot_vector);
+        DrawBSpline(vertices, _bspline_knot_vector);
         break;
     case DrawingType::CatmulRomSpline:
-        // add point to support_points!
-        _control_points.push_back(_mouse_pos_cache);
-
-        // clear Colordata
-        ClearColorData();
-
-        // render bezier
-        DrawCatmulRomSpline(_control_points);
+        // render catmul rom spline
+        DrawCatmulRomSpline(vertices);
         break;
     case DrawingType::FillRectangle:
-        FillRectangle(_mouse_pos_cache, current_pos);
+        // draw every vertex pair
+        for (auto i = 0U; i < vertices.size(); i += 2) {
+            if (i+1 < vertices.size())
+                FillRectangle(vertices[i], vertices[i+1]);
+        }
+        
         break;
     case DrawingType::FillTriangle:
-        _vertices.emplace_back(x, y);
-        FillTriangle(_vertices);
+        FillTriangle(vertices);
         break;
     case DrawingType::FillPolygon:
-        _vertices.emplace_back(x, y);
-        FillPolygon(_vertices, Color(0x00FFFF));
+        FillPolygon(vertices, Color(0x00FFFF));
         break;
     }
 }

@@ -41,6 +41,14 @@ class DrawingAlgoApp : public SFMLApp {
         FillPolygon
     };
 
+    enum class TransformationType {
+        None,
+        Translate,
+        Scale,
+        Rotate,
+        Shear
+    };
+
     // DrawingAlgoApp declaration
 public:
     DrawingAlgoApp();
@@ -55,6 +63,7 @@ protected:
     //
     // event handler
 protected:
+    virtual void OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) override;
     virtual void OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) override;
     virtual void OnMouseButtonPressed(sf::Mouse::Button button, int x, int y) override;
     virtual void OnMouseButtonReleased(sf::Mouse::Button button, int x, int y) override;
@@ -78,6 +87,7 @@ private:
     //
     // drawing algorithms
 private:
+    void DrawCurrentMode();
     void DrawLineBresenham(const Point2D p0, const Point2D p1, const Color& color = Color(0, 255, 0));
     void DrawLineMidpoint (const Point2D p0, const Point2D p1, const Color& color = Color(0, 255, 0));
     void DrawCircle(const Point2D center, uint radius, const Color& color = Color(0, 255, 0));
@@ -94,7 +104,6 @@ private:
 private:
     std::vector<Point2D> _vertices;
 
-    std::vector<Point2D> _control_points;
     std::vector<float>   _bspline_knot_vector;
     int                  _bspline_poly_degree;
 
@@ -103,7 +112,8 @@ private:
     const uint   _num_Colors;
     std::unique_ptr<Color[]> _Color_data; // _width * _height Colors
 
-    glm::mat3 _transform_vec;
+    glm::mat3          _transform_vec;
+    TransformationType _transform_type;
 
 private:
     ConfigFile _config;
