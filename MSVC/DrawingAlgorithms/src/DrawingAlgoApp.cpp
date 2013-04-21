@@ -803,16 +803,22 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
 void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) {
     typedef sf::Keyboard::Key Key;
     
+    int d_translate = 4;
+    float d_scale = .05f;
+    float d_rotate = 2.f;
+
     switch (key) {
     // Transformations control
     case Key::Left:
         switch (_transform_type) {
         case TransformationType::Translate:
-            _transform_vec = translate(glm::vec2(-1, 0)) * _transform_vec;
+            _transform_vec = translate(glm::vec2(-d_translate, 0)) * _transform_vec;
             break;
         case TransformationType::Scale:
+            _transform_vec = scale(1.f - d_scale, 1.f) * _transform_vec;
             break;
         case TransformationType::Rotate:
+            _transform_vec = rotate(d_rotate) * _transform_vec;
             break;
         case TransformationType::Shear:
             break;
@@ -821,11 +827,13 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
     case Key::Right:
         switch (_transform_type) {
         case TransformationType::Translate:
-            _transform_vec = translate(glm::vec2(1, 0)) * _transform_vec;
+            _transform_vec = translate(glm::vec2(d_translate, 0)) * _transform_vec;
             break;
         case TransformationType::Scale:
+            _transform_vec = scale(1.f + d_scale, 1.f) * _transform_vec;
             break;
         case TransformationType::Rotate:
+            _transform_vec = rotate(-d_rotate) * _transform_vec;
             break;
         case TransformationType::Shear:
             break;
@@ -834,9 +842,10 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
     case Key::Up:
         switch (_transform_type) {
         case TransformationType::Translate:
-            _transform_vec = translate(glm::vec2(0, -1)) * _transform_vec;
+            _transform_vec = translate(glm::vec2(0, -d_translate)) * _transform_vec;
             break;
         case TransformationType::Scale:
+            _transform_vec = scale(1.f, 1.f + d_scale) * _transform_vec;
             break;
         case TransformationType::Rotate:
             break;
@@ -847,9 +856,10 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
     case Key::Down:
         switch (_transform_type) {
         case TransformationType::Translate:
-            _transform_vec = translate(glm::vec2(0, 1)) * _transform_vec;
+            _transform_vec = translate(glm::vec2(0, d_translate)) * _transform_vec;
             break;
         case TransformationType::Scale:
+            _transform_vec = scale(1.f, 1.f - d_scale) * _transform_vec;
             break;
         case TransformationType::Rotate:
             break;
@@ -871,7 +881,8 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
     case Key::C:
         ClearColorData();
         
-        // clear vertices
+        // clear vertices and transform matrix
+        _transform_vec = glm::mat3(1.f);
         _vertices.clear();
         break;
     case Key::X:

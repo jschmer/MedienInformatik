@@ -27,6 +27,8 @@ inline glm::mat3 rotate(float angle) {
     using glm::cos;
     using glm::sin;
 
+    angle = glm::radians(angle);
+
     return glm::mat3(glm::vec3(cos(angle),  sin(angle), 0),
                      glm::vec3(-sin(angle), cos(angle), 0),
                      glm::vec3(0, 0, 1));
