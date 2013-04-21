@@ -298,6 +298,9 @@ void SFMLApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, bool shi
     typedef sf::Keyboard::Key Key;
 
     switch (key) {
+    case Key::Escape:
+        OnClosed();
+        break;
     case Key::H:
         _show_help = !_show_help;
         break;
