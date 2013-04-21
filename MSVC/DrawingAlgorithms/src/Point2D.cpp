@@ -9,7 +9,7 @@ std::function<bool(Point2D, Point2D)> Point2D::less_y = [](const Point2D& first,
 //
 // Point2D struct definition
 Point2D::Point2D()
-    : x(0U), y(0U)
+    : x(0.f), y(0.f), w(0.f)
 {}
 
 Point2D::Point2D(float x, float y, float w)
@@ -21,7 +21,7 @@ Point2D::Point2D(int x, int y, int w)
 {}
 
 Point2D::Point2D(sf::Vector2f v)
-    :  x(static_cast<float>(v.x)), y(static_cast<float>(v.y))
+    :  x(static_cast<float>(v.x)), y(static_cast<float>(v.y)), w(1.f)
 {}
 
 Point2D::Point2D(glm::vec3 v)
