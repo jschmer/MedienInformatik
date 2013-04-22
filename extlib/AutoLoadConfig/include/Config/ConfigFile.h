@@ -1,3 +1,8 @@
+/* 
+ * Copyright (c) 2013 Jens Schmer
+ * This file is distributed under the MIT License.
+ * Consult COPYING within this package for further information. 
+ */
 #ifndef CONFIG_FILE_H__
 #define CONFIG_FILE_H__
 
