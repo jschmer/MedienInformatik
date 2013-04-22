@@ -891,6 +891,7 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
     int d_translate = 4;
     float d_scale = .05f;
     float d_rotate = 2.f;
+    float d_shear = .1f;
 
     // translate to origin
     _transform_vec = translate(-_transform_origin) * _transform_vec;
@@ -909,6 +910,7 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
             _transform_vec = rotate(d_rotate) * _transform_vec;
             break;
         case TransformationType::Shear:
+            _transform_vec = shear(d_shear, 0) * _transform_vec;
             break;
         }
         break;
@@ -924,6 +926,7 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
             _transform_vec = rotate(-d_rotate) * _transform_vec;
             break;
         case TransformationType::Shear:
+            _transform_vec = shear(-d_shear, 0) * _transform_vec;
             break;
         }
         break;
@@ -938,6 +941,7 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
         case TransformationType::Rotate:
             break;
         case TransformationType::Shear:
+            _transform_vec = shear(0, -d_shear) * _transform_vec;
             break;
         }
         break;
@@ -952,6 +956,7 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
         case TransformationType::Rotate:
             break;
         case TransformationType::Shear:
+            _transform_vec = shear(0, d_shear) * _transform_vec;
             break;
         }
         break;

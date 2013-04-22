@@ -27,6 +27,12 @@ inline glm::mat3 scale(float x, float y) {
                      glm::vec3(0, 0, 1));
 }
 
+inline glm::mat3 shear(float x, float y) {
+    return glm::mat3(glm::vec3(1, y, 0),
+                     glm::vec3(x, 1, 0),
+                     glm::vec3(0, 0, 1));
+}
+
 // CCW!
 inline glm::mat3 rotate(float angle) {
     using glm::cos;
