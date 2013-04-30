@@ -80,7 +80,7 @@ DrawingAlgoApp::DrawingAlgoApp()
     _num_Colors(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
-    _config("DrawingAlgoApp.cfg"),
+    _config("2D-Algorithms.cfg"),
     _transform_vec(1.0f),
     _transform_type(TransformationType::None),
     _transform_origin(0, 0),
