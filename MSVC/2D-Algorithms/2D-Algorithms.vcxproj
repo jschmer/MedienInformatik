@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C9C5698D-FAA2-4198-B8D7-D05DCE7B405F}</ProjectGuid>
     <RootNamespace>2D-Algorithms</RootNamespace>
-    <ProjectName>2D-ALgorithms</ProjectName>
+    <ProjectName>2D-Algorithms</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
