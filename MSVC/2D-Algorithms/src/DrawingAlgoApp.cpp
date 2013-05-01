@@ -80,7 +80,7 @@ DrawingAlgoApp::DrawingAlgoApp()
     _num_Colors(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
-    _config("2D-Algorithms.cfg"),
+    _config("2D_Algorithms.cfg"),
     _transform_vec(1.0f),
     _transform_type(TransformationType::None),
     _transform_origin(0, 0),
@@ -139,10 +139,11 @@ Modes:
 3 = Circle
 4 = Bezier
 5 = B-Spline
-6 = Catmul-Rom-Spline
-7 = Fill Rectangle
-8 = Fill Triangle
-9 = Fill Polygon
+6 = B-Spline Closed
+7 = Catmul-Rom-Spline
+8 = Fill Rectangle
+9 = Fill Triangle
+0 = Fill Polygon
 
 Transformations:
 (control with Arrow Keys)
@@ -190,6 +191,9 @@ void DrawingAlgoApp::RenderCurrentMode() {
     case DrawingType::BSpline:
         title += "B-Spline";
         break;
+    case DrawingType::BSplineClosed:
+        title += "B-Spline Closed";
+        break;
     case DrawingType::CatmulRomSpline:
         title += "Catmull-Rom Spline";
         break;
@@ -207,6 +211,9 @@ void DrawingAlgoApp::RenderCurrentMode() {
         break;
     case DrawingType::Line:
         title += "Line";
+        break;
+    default:
+        title += "Not implemented! Baka!";
         break;
     }
 
@@ -272,21 +279,31 @@ void DrawingAlgoApp::updateConfigData() {
                 // new vector
                 decltype(_bspline_knot_vector) new_knot_vec;
 
-                // populate new vector
-                for (auto i = 0; i < poly_deg_tmp + 1; ++i)
-                    new_knot_vec.push_back(0.f);
+                if (_draw_type == DrawingType::BSpline) {
+                    // populate new vector
+                    for (auto i = 0; i < poly_deg_tmp + 1; ++i)
+                        new_knot_vec.push_back(0.f);
 
-                auto individual_factors = new_knot_vec_len - (poly_deg_tmp + 1) * 2;
-                auto inc = 1.f / (individual_factors + 1);
+                    auto individual_factors = new_knot_vec_len - (poly_deg_tmp + 1) * 2;
+                    auto inc = 1.f / (individual_factors + 1);
             
-                float val = inc;
-                for (auto i = 0U; i < individual_factors; ++i, val += inc)
-                    new_knot_vec.push_back(val);
+                    float val = inc;
+                    for (auto i = 0U; i < individual_factors; ++i, val += inc)
+                        new_knot_vec.push_back(val);
 
-                for (auto i = 0; i < poly_deg_tmp + 1; ++i)
-                    new_knot_vec.push_back(1.f);
+                    for (auto i = 0; i < poly_deg_tmp + 1; ++i)
+                        new_knot_vec.push_back(1.f);
+                }
+                else if (_draw_type == DrawingType::BSplineClosed) {
 
-                // TODO: write new knot vector to config file
+                    auto inc = 1.f/(_vertices.size());
+                    auto val = 0.f;
+                    // populate new vector, m+2 entries with m = number of control points - 1
+                    for (auto i = 0; i < _vertices.size()+1; ++i, val += inc)
+                        new_knot_vec.push_back(val);
+                }
+
+                // write new knot vector to config file
                 knot_vec_str = "[" + join(new_knot_vec, ", ") + "]";
 
                 // update internal poly degree
@@ -548,12 +565,18 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     const auto support_points_size = support_points.size(); // p
     const auto& polynom_degree = _bspline_poly_degree; // n
 
+    // m = p - 1
+    const auto m = support_points_size - 1;
+
     // knot_vector content:
     // n + 1   0en
     // n + 1   1en
     // rest: frei wählbar
 
-    // größe: n + p + 1
+    // größe: n + m + 2
+
+    // mit n = 4, m = 7
+    // größe = 4 + 7 + 2 = 13
 
     // render support points in red
     DrawPoints(support_points, Color(0xFF0000));
@@ -600,6 +623,125 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
         }
         // p(t) = b(i,n)
         points.push_back(b[i][n]);
+    }
+
+    // render curve
+    auto p0 = *points.cbegin();
+    for (auto it = points.cbegin() + 1; it != points.cend(); ++it) {
+        auto& p1 = *it;
+
+        DrawLineBresenham(p0, p1, Color(0xFFFF00));
+
+        p0 = p1;
+    }
+}
+
+void DrawingAlgoApp::DrawBSplineClosed(const std::vector<Point2D>& support_points, std::vector<float> knot_vector) {
+    const auto support_points_size = support_points.size(); // p
+    const auto& polynom_degree = _bspline_poly_degree; // n
+
+    const auto& n = polynom_degree;
+    const int m  = support_points_size - 1; // m
+
+    // knotenvektorgröße: n + m + 1 + 1
+    //                  = n + p + 1
+
+    // m = 3, n = 3
+    // => knotenvektorgröße = 3 + 3 + 2 = 8
+
+    // [0, 1, 2, 3, 4, 5, 6, 7]
+
+    // bis idx m+2 frei wählbar
+    // --> ersten m+2 frei wählbar! // hier: 5
+    // t_(m+2) = t_(m+1) + (t_1-t_0)
+    // ...
+    // t_(n+m+1) = t_(n+m) + (t_n-t_(n-1))
+
+    // t_5 = t-4 + (t_1 - t_0)  // hier: 4 + (1 - 0) = 5
+    // ...                      // hier: 5 + (2 - 1) = 6
+    // t_7 = t-6 + (t_3 - t_2)  // hier: 6 + (3 - 2) = 7
+
+    // render support points in red
+    DrawPoints(support_points, Color(0xFF0000));
+
+    if (m <= 2 || knot_vector.size() != m + 2) {
+        return;
+    }
+
+    for (auto i = m+2; i <= n+m+1; ++i) {
+        knot_vector.push_back(knot_vector[i-1] + (knot_vector[i-m-1] - knot_vector[i-m-2]));
+    }
+
+    std::vector<std::vector<Point2D>> d(m + 1, std::vector<Point2D>(n + 1));
+    std::vector<Point2D> points;
+    
+    // m = Anzahl Kontrollpunkte - 1
+    // n = Polynomgrad
+
+    auto dt = _delta_t;
+
+    for (float t = .0f; t <= 1.f + dt/2.f; t += dt) {
+        // Berechne i so, dass t_i ≤ t < t_i+1, 0 ≤ i ≤ m
+        const int i = [&](float t) {
+            int i = 0;
+            auto size = static_cast<int>(support_points_size);
+            while (i < size && knot_vector[i] <= t)
+                ++i;
+            return --i;
+        }(t);
+
+        auto tt = t;
+
+        // FOR j := 0 TO n DO
+        for (int j = 0; j <= n; ++j) {
+            // l ≔ i-n+j-1
+            auto l = i - n + j - 1;
+            
+            // REPEAT UNTIL l == i
+            do {
+                // l ∶= l+1
+                ++l;
+
+                // IF l < 0 THEN
+                if (l < 0) {
+                    // l ∶= l+m+1
+                    l = l + m + 1;
+                    // t^* ≔ t^*-t_0+t_(m+1)
+                    tt = tt - knot_vector[0] + knot_vector[m+1];
+                }
+                else {
+                    // IF l ≥ m+1 THEN
+                    if (l >= m+1) {
+                        // l ≔ l-m-1
+                        l = l - m - 1;
+                        // t^* ≔ t^*-t_(m+1)+t_0
+                        tt = tt - knot_vector[m+1] + knot_vector[0];
+                    }
+                }
+
+        //      IF j == 0 THEN
+                if (j == 0) {
+        //          d_l^0 ≔ d_l
+                    d[l][0] = support_points[l];
+                }
+        //      ELSE 
+                else {
+        //          t_l^j ≔ (t^*-t_l)/(t_(l+n+1-j)-t_l)
+                    auto _t = (tt - knot_vector[l]) / (knot_vector[l+n+1-j] - knot_vector[l]);
+        //          d_l^j ≔ (1-t_l^j )⋅d_((l-1)  mod (m+1))^(j-1)+t_l^j⋅d_l^(j-1)
+
+                    auto idx = (l-1)%(m+1);
+                    if (idx < 0)
+                        idx += m+1;
+                    auto& d1 = d[idx][j-1];
+                    auto& d2 = d[l][j-1];
+
+                    d[l][j] = (1 - _t) * d1 + _t * d2;
+                }
+            } while (l != i);
+        }
+        // b(t^* )≔d_i^n
+        points.push_back(d[i][n]);
     }
 
     // render curve
@@ -1004,15 +1146,19 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         updateConfigData();
         break;
     case Key::Num6:
-        _draw_type = DrawingType::CatmulRomSpline;
+        _draw_type = DrawingType::BSplineClosed;
+        updateConfigData();
         break;
     case Key::Num7:
-        _draw_type = DrawingType::FillRectangle;
+        _draw_type = DrawingType::CatmulRomSpline;
         break;
     case Key::Num8:
-        _draw_type = DrawingType::FillTriangle;
+        _draw_type = DrawingType::FillRectangle;
         break;
     case Key::Num9:
+        _draw_type = DrawingType::FillTriangle;
+        break;
+    case Key::Num0:
         _draw_type = DrawingType::FillPolygon;
         break;
     // Transformations selection
@@ -1065,7 +1211,8 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
 
         switch (_draw_type) {
          // update config for B-spline mode!
-         case DrawingType::BSpline:
+        case DrawingType::BSpline:
+        case DrawingType::BSplineClosed:
             updateConfigData();
             break;
         }
@@ -1117,8 +1264,12 @@ void DrawingAlgoApp::DrawCurrentMode() {
         DrawBezier(vertices);
         break;
     case DrawingType::BSpline:
-        // render bezier
+        // render bspline
         DrawBSpline(vertices, _bspline_knot_vector);
+        break;
+    case DrawingType::BSplineClosed:
+        // render bezier
+        DrawBSplineClosed(vertices, _bspline_knot_vector);
         break;
     case DrawingType::CatmulRomSpline:
         // render catmul rom spline
