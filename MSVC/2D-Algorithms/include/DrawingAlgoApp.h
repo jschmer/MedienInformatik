@@ -44,7 +44,8 @@ class DrawingAlgoApp : public SFMLApp {
         CatmulRomSpline,
         FillRectangle,
         FillTriangle,
-        FillPolygon
+        FillPolygon,
+        SetClippingRect
     };
 
     enum class TransformationType {
@@ -54,6 +55,11 @@ class DrawingAlgoApp : public SFMLApp {
         Rotate,
         Shear,
         SetOrigin
+    };
+
+    struct ClippingRectangle {
+        int xmin, xmax;
+        int ymin, ymax;
     };
 
     // DrawingAlgoApp declaration
@@ -96,9 +102,9 @@ private:
     // drawing algorithms
 private:
     void DrawCurrentMode();
-    void DrawLineBresenham(const Point2D p0, const Point2D p1, const Color& color = Color(0, 255, 0));
-    void DrawLineMidpoint (const Point2D p0, const Point2D p1, const Color& color = Color(0, 255, 0));
-    void DrawCircle(const Point2D center, uint radius, const Color& color = Color(0, 255, 0));
+    void DrawLineBresenham(Point2D p0, Point2D p1, const Color& color = Color(0, 255, 0));
+    void DrawLineMidpoint (Point2D p0, Point2D p1, const Color& color = Color(0, 255, 0));
+    void DrawCircle(Point2D center, uint radius, const Color& color = Color(0, 255, 0));
     void DrawBezier(const std::vector<Point2D>& support_points);
     void DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> _knot_vector);
     void DrawBSplineClosed(const std::vector<Point2D>& support_points, std::vector<float> _knot_vector);
@@ -108,9 +114,17 @@ private:
     void FillTriangle(std::vector<Point2D>& vertices);
     void FillPolygon(const std::vector<Point2D>& vertices, const Color& color = Color(0, 255, 0));
 
+    bool ClipLine(Point2D &start, Point2D &end) const;
+
+    int ClippingOutcodeFor(Point2D p) const;
+
     //
     // data
 private:
+    static const int width  = 800;
+    static const int height = 600;
+
+    ClippingRectangle _clipping_rect;
     std::vector<Point2D> _vertices;
 
     std::vector<float>   _bspline_knot_vector;

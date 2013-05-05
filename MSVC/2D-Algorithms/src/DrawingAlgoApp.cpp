@@ -19,11 +19,30 @@ using std::ostringstream;
 #include <SFML/OpenGL.hpp>
 #include <2d_transforms.h>
 
-#include <boost/heap/fibonacci_heap.hpp>
+//#include <boost/heap/fibonacci_heap.hpp>
 
 // signum function
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
+}
+
+// precondition: an intersection exists!
+inline Point2D GetLineIntersection(Point2D p00, Point2D p01, Point2D p10, Point2D p11) {
+    float x12 = p00.x - p01.x;
+    float x34 = p10.x - p11.x;
+    float y12 = p00.y - p01.y;
+    float y34 = p10.y - p11.y;
+
+    float c = x12 * y34 - y12 * x34;
+
+    // Intersection
+    float a = p00.x * p01.y - p00.y * p01.x;
+    float b = p10.x * p11.y - p10.y * p11.x;
+
+    float x = (a * x34 - b * x12) / c;
+    float y = (a * y34 - b * y12) / c;
+
+    return Point2D(x, y);
 }
 
 // join
@@ -76,7 +95,7 @@ Color Color::operator +(Color other) {
 //
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
-    : Super(800u, 600u, "Drawing Algorithms", sf::Style::Close),
+    : Super(width, height, "Drawing Algorithms", sf::Style::Close),
     _num_Colors(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
@@ -116,6 +135,15 @@ DrawingAlgoApp::DrawingAlgoApp()
 
     Point2D p(10, 2);
     auto p1 = _transform_vec * p;
+
+    // default clipping rectangle
+    _clipping_rect.xmin = 0;
+    _clipping_rect.xmax = width;
+    _clipping_rect.ymin = 0;
+    _clipping_rect.ymax = height;
+
+    auto pasd = GetLineIntersection(Point2D(2, 0), Point2D(2, 2), Point2D(1, 1), Point2D(3, 1));
+
 }
 
 DrawingAlgoApp::~DrawingAlgoApp()
@@ -144,6 +172,7 @@ Modes:
 8 = Fill Rectangle
 9 = Fill Triangle
 0 = Fill Polygon
+P = Set Clipping Rect
 
 Transformations:
 (control with Arrow Keys)
@@ -211,6 +240,9 @@ void DrawingAlgoApp::RenderCurrentMode() {
         break;
     case DrawingType::Line:
         title += "Line";
+        break;
+    case DrawingType::SetClippingRect:
+        title += "Setting Clipping Rectangle";
         break;
     default:
         title += "Not implemented! Baka!";
@@ -410,7 +442,10 @@ void DrawingAlgoApp::SaveAsPPM(const char* filename) {
 
 //
 // drawing algorithms
-void DrawingAlgoApp::DrawLineBresenham(const Point2D p0, const Point2D p1, const Color& color) {
+void DrawingAlgoApp::DrawLineBresenham(Point2D p0, Point2D p1, const Color& color) {
+    if (ClipLine(p0, p1) == false)
+        return;
+    
     // Startpunkt
     int x = p0.x;
     int y = p0.y;
@@ -470,7 +505,7 @@ void DrawingAlgoApp::DrawLineBresenham(const Point2D p0, const Point2D p1, const
     }
 }
 
-void DrawingAlgoApp::DrawLineMidpoint(const Point2D p0, const Point2D p1, const Color& color) {
+void DrawingAlgoApp::DrawLineMidpoint(Point2D p0, Point2D p1, const Color& color) {
     int x = p0.x;
     int y = p0.y;
     int dx = p1.x - p0.x;
@@ -488,7 +523,7 @@ void DrawingAlgoApp::DrawLineMidpoint(const Point2D p0, const Point2D p1, const 
     }
 }
 
-void DrawingAlgoApp::DrawCircle(const Point2D center, uint radius, const Color& color) {
+void DrawingAlgoApp::DrawCircle(Point2D center, uint radius, const Color& color) {
     int x1 = 0;
     int y1 = radius;
     int f  = 1 - radius;
@@ -1025,6 +1060,82 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
     }
 }
 
+int DrawingAlgoApp::ClippingOutcodeFor(Point2D p) const {
+    const auto epsi = 0.001;
+
+    int c = 0;
+    if (p.x < _clipping_rect.xmin - epsi) c |= 8; // p is left of clipping rect
+    if (p.x > _clipping_rect.xmax + epsi) c |= 4; // p is right of clipping rect
+    if (p.y < _clipping_rect.ymin - epsi) c |= 2; // p is above clipping rect
+    if (p.y > _clipping_rect.ymax + epsi) c |= 1; // p is beneath clipping rect
+    return c;
+}
+
+// returns true  if the line should be painted
+// returns false if the line is completely outside of the clipping rectangle
+bool DrawingAlgoApp::ClipLine(Point2D &start, Point2D &end) const {
+    while (true) {
+        auto startcode = ClippingOutcodeFor(start);
+        auto endcode   = ClippingOutcodeFor(end);
+
+        if ((startcode == 0) && (endcode == 0)) {
+            // line completely in rectangle: no clipping
+            return true;
+        }
+        else if (startcode & endcode) {
+            // line completely outside clipping rect: no painting
+            return false;
+        }
+        else {
+            // clip line
+            auto& clip_code = startcode ? startcode : endcode;
+            auto& clip_point = startcode ? start : end;
+
+
+            auto& xmin = _clipping_rect.xmin;
+            auto& xmax = _clipping_rect.xmax;
+            auto& ymin = _clipping_rect.ymin;
+            auto& ymax = _clipping_rect.ymax;
+
+            const auto LEFT = 8;
+            const auto RIGHT = 4;
+            const auto TOP = 2;
+            const auto BOTTOM = 1;
+
+            // points for the line to intersect
+            Point2D p0, p1;
+
+            if (clip_code & LEFT) {
+                // left line
+                p0 = Point2D(xmin, ymin);
+                p1 = Point2D(xmin, ymax);
+            }
+            else if (clip_code & RIGHT) {
+                // right line
+                p0 = Point2D(xmax, ymin);
+                p1 = Point2D(xmax, ymax);
+            }
+            else if (clip_code & TOP) {
+                // upper line
+                p0 = Point2D(xmin, ymin);
+                p1 = Point2D(xmax, ymin);
+            }
+            else if (clip_code & BOTTOM) {
+                // lower line
+                p0 = Point2D(xmin, ymax);
+                p1 = Point2D(xmax, ymax);
+            }
+            else {
+                assert(false);
+            }
+
+            auto intersection = GetLineIntersection(start, end, p0, p1);
+            clip_point = intersection;
+        }
+    }
+    return true;
+}
+
 //
 // event handler
 void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) {
@@ -1161,6 +1272,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
     case Key::Num0:
         _draw_type = DrawingType::FillPolygon;
         break;
+    case Key::P:
+        _draw_type = DrawingType::SetClippingRect;
+        break;
     // Transformations selection
     case Key::Q:
         _transform_type = TransformationType::None;
@@ -1215,6 +1329,18 @@ void DrawingAlgoApp::OnMouseButtonReleased(sf::Mouse::Button button, int x, int 
         case DrawingType::BSplineClosed:
             updateConfigData();
             break;
+        case DrawingType::SetClippingRect:
+            // update clipping rect
+            Point2D corner1 = _mouse_pos_cache; // 200|101 -> 300|201
+            Point2D corner2 = _vertices.back();
+            _vertices.pop_back();
+
+            _clipping_rect.xmin = corner1.x < corner2.x ? corner1.x : corner2.x;
+            _clipping_rect.xmax = corner1.x < corner2.x ? corner2.x : corner1.x;
+            _clipping_rect.ymin = corner1.y < corner2.y ? corner1.y : corner2.y;
+            _clipping_rect.ymax = corner1.y < corner2.y ? corner2.y : corner1.y;
+
+            break;
         }
     }
 
@@ -1235,7 +1361,6 @@ void DrawingAlgoApp::DrawCurrentMode() {
     
     auto& vertices = _transformed_vertices;
 
-    
     switch (_draw_type) {
     case DrawingType::Line:
         // draw every vertex pair
@@ -1290,4 +1415,20 @@ void DrawingAlgoApp::DrawCurrentMode() {
         FillPolygon(vertices, Color(0x00FFFF));
         break;
     }
+
+    // always draw clipping rect
+    auto& xmin = _clipping_rect.xmin;
+    auto& xmax = _clipping_rect.xmax;
+    auto& ymin = _clipping_rect.ymin;
+    auto& ymax = _clipping_rect.ymax;
+
+    auto lu = Point2D(xmin, ymin);
+    auto ru = Point2D(xmax, ymin);
+    auto rl = Point2D(xmax, ymax);
+    auto ll = Point2D(xmin, ymax);
+
+    DrawLineBresenham(lu, ru, Color(0x888888));
+    DrawLineBresenham(ru, rl, Color(0x888888));
+    DrawLineBresenham(rl, ll, Color(0x888888));
+    DrawLineBresenham(ll, lu, Color(0x888888));
 }
