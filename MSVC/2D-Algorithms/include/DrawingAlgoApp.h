@@ -45,6 +45,7 @@ class DrawingAlgoApp : public SFMLApp {
         FillRectangle,
         FillTriangle,
         FillPolygon,
+        Pythagoras,
         SetClippingRect
     };
 
@@ -109,14 +110,16 @@ private:
     void DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> _knot_vector);
     void DrawBSplineClosed(const std::vector<Point2D>& support_points, std::vector<float> _knot_vector);
     void DrawCatmulRomSpline(const std::vector<Point2D>& support_points);
+    void DrawPythagoras();
 
     void FillRectangle(const Point2D p0, const Point2D p1);
     void FillTriangle(std::vector<Point2D>& vertices);
     void FillPolygon(const std::vector<Point2D>& vertices, const Color& color = Color(0, 255, 0));
 
     bool ClipLine(Point2D &start, Point2D &end) const;
-
     int ClippingOutcodeFor(Point2D p) const;
+
+    void ApplyMatrix(glm::mat3 mat, std::vector<Point2D> &vertices) const;
 
     //
     // data

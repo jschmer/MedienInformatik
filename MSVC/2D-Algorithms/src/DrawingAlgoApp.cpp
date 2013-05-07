@@ -12,8 +12,11 @@
 #include <sstream>
 #include <regex>
 #include <string>
+#include <vector>
+
 using std::string;
 using std::ostringstream;
+using std::vector;
 
 #include <glm/gtx/transform.hpp>
 #include <SFML/OpenGL.hpp>
@@ -173,7 +176,8 @@ Modes:
 8 = Fill Rectangle
 9 = Fill Triangle
 0 = Fill Polygon
-P = Set Clipping Rect
+P = Pythagoras
+O = Set Clipping Rect
 
 F1 = Toggle Antialiasing
 
@@ -1063,6 +1067,45 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
     }
 }
 
+void DrawingAlgoApp::DrawPythagoras() {
+    using glm::mat3;
+    
+    vector<Point2D> quad;
+    quad.emplace_back(0, 0);
+    quad.emplace_back(1, 0);
+    quad.emplace_back(1, 1);
+    quad.emplace_back(0, 1);
+
+    vector<Point2D> tri;
+    tri.emplace_back(0, 0);
+    tri.emplace_back(0, 3);
+    tri.emplace_back(4, 3);
+
+    mat3 local_transform = translate(Point2D(300, 200)) * scale(50, 50);
+    ApplyMatrix(_transform_mat * local_transform, tri);
+
+    // draw triangle
+    FillTriangle(tri);
+
+    // draw quads
+    vector<mat3> quad_matrices;
+    quad_matrices.push_back(translate(Point2D(-3, 0)) * scale(3, 3)); // small
+    quad_matrices.push_back(translate(Point2D(0, 3))  * scale(4, 4)); // medium
+    quad_matrices.push_back(rotate(-glm::degrees(std::asin(4.f/5.f))) * scale(5, 5)); // large
+
+    for (auto& mat : quad_matrices) {
+        auto vtx_cpy = quad;
+        ApplyMatrix(_transform_mat * local_transform * mat, vtx_cpy);
+
+        for (auto it0 = vtx_cpy.begin(), it1 = it0 + 1; it0 != vtx_cpy.end(); ++it0, ++it1) {
+            if (it1 == vtx_cpy.end())
+                it1 = vtx_cpy.begin();
+
+            DrawLineBresenham(*it0, *it1, Color(0xFFFFFF));
+        }
+    }
+}
+
 int DrawingAlgoApp::ClippingOutcodeFor(Point2D p) const {
     const auto epsi = 0.001;
 
@@ -1275,8 +1318,11 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
     case Key::Num0:
         _draw_type = DrawingType::FillPolygon;
         break;
-    case Key::P:
+    case Key::O:
         _draw_type = DrawingType::SetClippingRect;
+        break;
+    case Key::P:
+        _draw_type = DrawingType::Pythagoras;
         break;
     case Key::F1:
         _antialiase = !_antialiase;
@@ -1362,12 +1408,12 @@ void DrawingAlgoApp::DrawCurrentMode() {
 
     // apply transformation to all vertices
     auto _transformed_vertices = _vertices;
-    for (auto& vtx : _transformed_vertices)
-        vtx = _transform_mat * vtx;
-    
+    ApplyMatrix(_transform_mat, _transformed_vertices);    
     auto& vertices = _transformed_vertices;
 
     switch (_draw_type) {
+    case DrawingType::None:
+        break;
     case DrawingType::Line:
         // draw every vertex pair
         for (auto i = 0U; i < vertices.size(); i += 2) {
@@ -1420,6 +1466,12 @@ void DrawingAlgoApp::DrawCurrentMode() {
     case DrawingType::FillPolygon:
         FillPolygon(vertices, Color(0x00FFFF));
         break;
+    case DrawingType::Pythagoras:
+        DrawPythagoras();
+        break;
+    default:
+        assert(false);
+        break;
     }
 
     // always draw clipping rect
@@ -1437,4 +1489,9 @@ void DrawingAlgoApp::DrawCurrentMode() {
     DrawLineBresenham(ru, rl, Color(0x888888));
     DrawLineBresenham(rl, ll, Color(0x888888));
     DrawLineBresenham(ll, lu, Color(0x888888));
+}
+
+void DrawingAlgoApp::ApplyMatrix(glm::mat3 mat, std::vector<Point2D> &vertices) const {
+    for (auto& vtx : vertices)
+        vtx = mat * vtx;
 }
