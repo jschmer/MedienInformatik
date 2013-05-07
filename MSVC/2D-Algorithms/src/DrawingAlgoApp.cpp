@@ -100,10 +100,11 @@ DrawingAlgoApp::DrawingAlgoApp()
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
     _config("2D_Algorithms.cfg"),
-    _transform_vec(1.0f),
+    _transform_mat(1.0f),
     _transform_type(TransformationType::None),
     _transform_origin(0, 0),
-    _show_current_mode(true)
+    _show_current_mode(true),
+    _antialiase(false)
 {
     _current_mode_text = sf::Text("", sf::Font(), 15u);
 
@@ -129,12 +130,12 @@ DrawingAlgoApp::DrawingAlgoApp()
     using glm::mat3;
 
     // column-major! rightmost transformation comes first!
-    //_transform_vec = translate(vec2(10, -5));
-    //_transform_vec = scale(1.5f, 2) * _transform_vec;
-    //_transform_vec = rotate(glm::radians(90.0f)) * _transform_vec;
+    //_transform_mat = translate(vec2(10, -5));
+    //_transform_mat = scale(1.5f, 2) * _transform_mat;
+    //_transform_mat = rotate(glm::radians(90.0f)) * _transform_mat;
 
     Point2D p(10, 2);
-    auto p1 = _transform_vec * p;
+    auto p1 = _transform_mat * p;
 
     // default clipping rectangle
     _clipping_rect.xmin = 0;
@@ -173,6 +174,8 @@ Modes:
 9 = Fill Triangle
 0 = Fill Polygon
 P = Set Clipping Rect
+
+F1 = Toggle Antialiasing
 
 Transformations:
 (control with Arrow Keys)
@@ -1147,76 +1150,76 @@ void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bo
     float d_shear = .1f;
 
     // translate to origin
-    _transform_vec = translate(-_transform_origin) * _transform_vec;
+    _transform_mat = translate(-_transform_origin) * _transform_mat;
 
     switch (key) {
     // Transformations control
     case Key::Left:
         switch (_transform_type) {
         case TransformationType::Translate:
-            _transform_vec = translate(glm::vec2(-d_translate, 0)) * _transform_vec;
+            _transform_mat = translate(glm::vec2(-d_translate, 0)) * _transform_mat;
             break;
         case TransformationType::Scale:
-            _transform_vec = scale(1.f - d_scale, 1.f) * _transform_vec;
+            _transform_mat = scale(1.f - d_scale, 1.f) * _transform_mat;
             break;
         case TransformationType::Rotate:
-            _transform_vec = rotate(d_rotate) * _transform_vec;
+            _transform_mat = rotate(d_rotate) * _transform_mat;
             break;
         case TransformationType::Shear:
-            _transform_vec = shear(d_shear, 0) * _transform_vec;
+            _transform_mat = shear(d_shear, 0) * _transform_mat;
             break;
         }
         break;
     case Key::Right:
         switch (_transform_type) {
         case TransformationType::Translate:
-            _transform_vec = translate(glm::vec2(d_translate, 0)) * _transform_vec;
+            _transform_mat = translate(glm::vec2(d_translate, 0)) * _transform_mat;
             break;
         case TransformationType::Scale:
-            _transform_vec = scale(1.f + d_scale, 1.f) * _transform_vec;
+            _transform_mat = scale(1.f + d_scale, 1.f) * _transform_mat;
             break;
         case TransformationType::Rotate:
-            _transform_vec = rotate(-d_rotate) * _transform_vec;
+            _transform_mat = rotate(-d_rotate) * _transform_mat;
             break;
         case TransformationType::Shear:
-            _transform_vec = shear(-d_shear, 0) * _transform_vec;
+            _transform_mat = shear(-d_shear, 0) * _transform_mat;
             break;
         }
         break;
     case Key::Up:
         switch (_transform_type) {
         case TransformationType::Translate:
-            _transform_vec = translate(glm::vec2(0, -d_translate)) * _transform_vec;
+            _transform_mat = translate(glm::vec2(0, -d_translate)) * _transform_mat;
             break;
         case TransformationType::Scale:
-            _transform_vec = scale(1.f, 1.f + d_scale) * _transform_vec;
+            _transform_mat = scale(1.f, 1.f + d_scale) * _transform_mat;
             break;
         case TransformationType::Rotate:
             break;
         case TransformationType::Shear:
-            _transform_vec = shear(0, -d_shear) * _transform_vec;
+            _transform_mat = shear(0, -d_shear) * _transform_mat;
             break;
         }
         break;
     case Key::Down:
         switch (_transform_type) {
         case TransformationType::Translate:
-            _transform_vec = translate(glm::vec2(0, d_translate)) * _transform_vec;
+            _transform_mat = translate(glm::vec2(0, d_translate)) * _transform_mat;
             break;
         case TransformationType::Scale:
-            _transform_vec = scale(1.f, 1.f - d_scale) * _transform_vec;
+            _transform_mat = scale(1.f, 1.f - d_scale) * _transform_mat;
             break;
         case TransformationType::Rotate:
             break;
         case TransformationType::Shear:
-            _transform_vec = shear(0, d_shear) * _transform_vec;
+            _transform_mat = shear(0, d_shear) * _transform_mat;
             break;
         }
         break;
     }
 
     // translate back
-    _transform_vec = translate(_transform_origin) * _transform_vec;
+    _transform_mat = translate(_transform_origin) * _transform_mat;
 
     DrawCurrentMode();
 }
@@ -1231,7 +1234,7 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         ClearColorData();
         
         // clear vertices and transform matrix
-        _transform_vec = glm::mat3(1.f);
+        _transform_mat = glm::mat3(1.f);
         _vertices.clear();
         break;
     case Key::X:
@@ -1274,6 +1277,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         break;
     case Key::P:
         _draw_type = DrawingType::SetClippingRect;
+        break;
+    case Key::F1:
+        _antialiase = !_antialiase;
         break;
     // Transformations selection
     case Key::Q:
@@ -1357,7 +1363,7 @@ void DrawingAlgoApp::DrawCurrentMode() {
     // apply transformation to all vertices
     auto _transformed_vertices = _vertices;
     for (auto& vtx : _transformed_vertices)
-        vtx = _transform_vec * vtx;
+        vtx = _transform_mat * vtx;
     
     auto& vertices = _transformed_vertices;
 

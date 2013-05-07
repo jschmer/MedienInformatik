@@ -130,12 +130,13 @@ private:
     std::vector<float>   _bspline_knot_vector;
     int                  _bspline_poly_degree;
 
+    bool _antialiase;
     sf::Vector2f _mouse_pos_cache;
     DrawingType  _draw_type;
     const uint   _num_Colors;
     std::unique_ptr<Color[]> _Color_data; // _width * _height Colors
 
-    glm::mat3          _transform_vec;
+    glm::mat3          _transform_mat;
     Point2D            _transform_origin;
     TransformationType _transform_type;
 
