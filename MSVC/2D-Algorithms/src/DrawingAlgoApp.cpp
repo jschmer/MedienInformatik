@@ -13,6 +13,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include <cmath>
 
 using std::string;
 using std::ostringstream;
@@ -28,6 +29,19 @@ using std::vector;
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
+
+inline double fract_part(double d) {
+    double intpart;
+    auto fractpart = std::modf(d, &intpart);
+    return fractpart;
+}
+
+inline double int_part(double d) {
+    double intpart;
+    auto fractpart = std::modf(d, &intpart);
+    return intpart;
+}
+
 
 // precondition: an intersection exists!
 inline Point2D GetLineIntersection(Point2D p00, Point2D p01, Point2D p10, Point2D p11) {
@@ -204,6 +218,9 @@ Z = Set Transformation Origin
 }
 
 void DrawingAlgoApp::OnRender() {
+    DrawLineAntialiasedWu(Point2D(50, 50), Point2D(400, 70));
+    DrawLineBresenham(Point2D(50, 50+50), Point2D(400, 70+50), Color(0xFFFFFF));
+    
     // render the Color buffer 
     RenderColorArray();
 
@@ -512,6 +529,153 @@ void DrawingAlgoApp::DrawLineBresenham(Point2D p0, Point2D p1, const Color& colo
     }
 }
 
+void DrawingAlgoApp::DrawLineAntialiasedWu(Point2D p0, Point2D p1, const Color& color) {
+    //boolean steep := abs(y1 - y0) > abs(x1 - x0)
+    auto steep = std::abs(p1.y - p0.y) > std::abs(p1.x - p0.x);
+
+    //if steep then
+    if (steep) {
+    //    swap(x0, y0)
+    //    swap(x1, y1)
+        std::swap(p0.x, p0.y);
+        std::swap(p1.x, p1.y);
+    //end if
+    }
+
+    //if x0 > x1 then
+    if (p0.x > p1.x) {
+    //  swap(x0, x1)
+    //  swap(y0, y1)
+        std::swap(p0.x, p1.x);
+        std::swap(p0.y, p1.y);
+    //end if
+    }
+
+    //dx := x1 - x0
+    //dy := y1 - y0
+    //gradient := dy / dx
+    auto dx = p1.x - p0.x;
+    auto dy = p1.y - p0.y;
+    auto gradient = dy/dx;
+
+    //// handle first endpoint
+    //xend := round(x0)
+    //yend := y0 + gradient * (xend - x0)
+    auto xend = p0.x;
+    auto yend = p0.y + gradient * (xend - p0.x);
+
+    //xgap := rfpart(x0 + 0.5)
+    auto xgap = 1 - fract_part(p0.x + .5);
+
+    //xpxl1 := xend   //this will be used in the main loop
+    //ypxl1 := ipart(yend)
+    auto xpxl1 = xend;
+    auto ypxl1 = int_part(yend);
+
+    //if steep then
+    if (steep) {
+    //    plot(ypxl1,   xpxl1, rfpart(yend) * xgap)
+    //    plot(ypxl1+1, xpxl1,  fpart(yend) * xgap)
+        auto param3 = (1 - fract_part(yend)) * xgap;
+        auto col = param3 * 255;
+        this->SetColor(ypxl1,   xpxl1, Color(col, col, col));
+
+        param3 = fract_part(yend) * xgap;
+        col = param3 * 255;
+        this->SetColor(ypxl1+1, xpxl1, Color(col, col, col));
+    }
+    //else
+    else {
+    //    plot(xpxl1, ypxl1  , rfpart(yend) * xgap)
+    //    plot(xpxl1, ypxl1+1,  fpart(yend) * xgap)
+        auto param3 = (1 - fract_part(yend)) * xgap;
+        auto col = param3 * 255;
+        this->SetColor(xpxl1, ypxl1,   Color(col, col, col));
+
+        param3 = fract_part(yend) * xgap;
+        col = param3 * 255;
+        this->SetColor(xpxl1, ypxl1+1, Color(col, col, col));
+    }
+    //end if
+
+    //intery := yend + gradient // first y-intersection for the main loop
+    auto intery = yend + gradient;
+
+    //// handle second endpoint
+
+    //xend := round(x1)
+    //yend := y1 + gradient * (xend - x1)
+    xend = p1.x;
+    yend = p1.y + gradient * (xend - p1.x);
+
+    //xgap := fpart(x1 + 0.5)
+    xgap = 1; // fract_part(p1.x + .5);
+
+    //xpxl2 := xend //this will be used in the main loop
+    //ypxl2 := ipart(yend)
+    auto xpxl2 = xend;
+    auto ypxl2 = int_part(yend);
+
+    //if steep then
+    if (steep) {
+    //    plot(ypxl2  , xpxl2, rfpart(yend) * xgap)
+    //    plot(ypxl2+1, xpxl2,  fpart(yend) * xgap)
+        auto param3 = (1 - fract_part(yend)) * xgap;
+        auto col = param3 * 255;
+        SetColor(ypxl2,   xpxl2, Color(col, col, col));
+
+        param3 = fract_part(yend) * xgap;
+        col = param3 * 255;
+        SetColor(ypxl2+1, xpxl2, Color(col, col, col));
+    }
+    else {
+    //else
+    //    plot(xpxl2, ypxl2,  rfpart(yend) * xgap)
+    //    plot(xpxl2, ypxl2+1, fpart(yend) * xgap)
+        auto param3 = (1 - fract_part(yend)) * xgap;
+        auto col = param3 * 255;
+        SetColor(xpxl2, ypxl2,   Color(col, col, col));
+
+        param3 = fract_part(yend) * xgap;
+        col = param3 * 255;
+        SetColor(xpxl2, ypxl2+1, Color(col, col, col));
+    }
+    //end if
+
+    //// main loop
+
+    //for x from xpxl1 + 1 to xpxl2 - 1 do
+    for (auto x = xpxl1 + 1; x < xpxl2; ++x) {
+    //     if  steep then
+        if (steep) {
+    //        plot(ipart(intery)  , x, rfpart(intery))
+    //        plot(ipart(intery)+1, x,  fpart(intery))
+            auto param3 = (1 - fract_part(intery)) * xgap;
+            auto col = param3 * 255;
+            SetColor(int_part(intery),   x, Color(col, col, col));
+
+            param3 = fract_part(intery) * xgap;
+            col = param3 * 255;
+            SetColor(int_part(intery)+1, x, Color(col, col, col));
+        }
+        else {
+    //    else
+    //        plot(x, ipart (intery),  rfpart(intery))
+    //        plot(x, ipart (intery)+1, fpart(intery))
+            auto param3 = (1 - fract_part(intery)) * xgap;
+            auto col = param3 * 255;
+            SetColor(x, int_part(intery),   Color(col, col, col));
+
+            param3 = fract_part(intery) * xgap;
+            col = param3 * 255;
+            SetColor(x, int_part(intery)+1, Color(col, col, col));
+        }
+    //    end if
+    //    intery := intery + gradient
+        intery = intery + gradient;
+    }
+}
+
 void DrawingAlgoApp::DrawLineMidpoint(Point2D p0, Point2D p1, const Color& color) {
     int x = p0.x;
     int y = p0.y;
@@ -525,7 +689,8 @@ void DrawingAlgoApp::DrawLineMidpoint(Point2D p0, Point2D p1, const Color& color
         x++;
         if (f > 0) { 
             y += 1;
-            f -= dx; }
+            f -= dx;
+        }
         f += dy;
     }
 }

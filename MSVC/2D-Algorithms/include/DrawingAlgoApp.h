@@ -104,6 +104,7 @@ private:
 private:
     void DrawCurrentMode();
     void DrawLineBresenham(Point2D p0, Point2D p1, const Color& color = Color(0, 255, 0));
+    void DrawLineAntialiasedWu(Point2D p0, Point2D p1, const Color& color = Color(0, 255, 0));
     void DrawLineMidpoint (Point2D p0, Point2D p1, const Color& color = Color(0, 255, 0));
     void DrawCircle(Point2D center, uint radius, const Color& color = Color(0, 255, 0));
     void DrawBezier(const std::vector<Point2D>& support_points);
@@ -124,8 +125,8 @@ private:
     //
     // data
 private:
-    static const int width  = 800;
-    static const int height = 600;
+    static const int width  = 1200;
+    static const int height = 800;
 
     ClippingRectangle _clipping_rect;
     std::vector<Point2D> _vertices;
