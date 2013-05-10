@@ -768,9 +768,10 @@ void DrawingAlgoApp::DrawBezier(const std::vector<Point2D>& support_points) {
     }
 }
 
-void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> knot_vector) {
+void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points) {
     const auto support_points_size = support_points.size(); // p
-    const auto& polynom_degree = _bspline_poly_degree; // n
+    const auto& polynom_degree     = _bspline_poly_degree; // n
+    const auto& knot_vector        = _bspline_knot_vector;
 
     // m = p - 1
     const auto m = support_points_size - 1;
@@ -843,12 +844,13 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points, con
     }
 }
 
-void DrawingAlgoApp::DrawBSplineClosed(const std::vector<Point2D>& support_points, std::vector<float> knot_vector) {
+void DrawingAlgoApp::DrawBSplineClosed(const std::vector<Point2D>& support_points) {
     const auto support_points_size = support_points.size(); // p
-    const auto& polynom_degree = _bspline_poly_degree; // n
+    const auto& polynom_degree     = _bspline_poly_degree; // n
+    const auto& knot_vector        = _bspline_knot_vector;
 
     const auto& n = polynom_degree;
-    const int m  = support_points_size - 1; // m
+    const int m   = support_points_size - 1; // m
 
     // knotenvektorgröße: n + m + 1 + 1
     //                  = n + p + 1
@@ -1347,6 +1349,8 @@ bool DrawingAlgoApp::ClipLine(Point2D &start, Point2D &end) const {
     return true;
 }
 
+
+
 //
 // event handler
 void DrawingAlgoApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) {
@@ -1607,11 +1611,11 @@ void DrawingAlgoApp::DrawCurrentMode() {
         break;
     case DrawingType::BSpline:
         // render bspline
-        DrawBSpline(vertices, _bspline_knot_vector);
+        DrawBSpline(vertices);
         break;
     case DrawingType::BSplineClosed:
         // render bezier
-        DrawBSplineClosed(vertices, _bspline_knot_vector);
+        DrawBSplineClosed(vertices);
         break;
     case DrawingType::CatmulRomSpline:
         // render catmul rom spline

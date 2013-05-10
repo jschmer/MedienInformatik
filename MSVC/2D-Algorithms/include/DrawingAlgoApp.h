@@ -108,8 +108,8 @@ private:
     void DrawLineMidpoint (Point2D p0, Point2D p1, const Color& color = Color(0, 255, 0));
     void DrawCircle(Point2D center, uint radius, const Color& color = Color(0, 255, 0));
     void DrawBezier(const std::vector<Point2D>& support_points);
-    void DrawBSpline(const std::vector<Point2D>& support_points, const std::vector<float> _knot_vector);
-    void DrawBSplineClosed(const std::vector<Point2D>& support_points, std::vector<float> _knot_vector);
+    void DrawBSpline(const std::vector<Point2D>& support_points);
+    void DrawBSplineClosed(const std::vector<Point2D>& support_points);
     void DrawCatmulRomSpline(const std::vector<Point2D>& support_points);
     void DrawPythagoras();
 
