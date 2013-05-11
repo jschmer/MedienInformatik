@@ -218,9 +218,24 @@ Z = Set Transformation Origin
 }
 
 void DrawingAlgoApp::OnRender() {
-    DrawLineAntialiasedWu(Point2D(50, 50), Point2D(400, 70));
-    DrawLineBresenham(Point2D(50, 50+50), Point2D(400, 70+50), Color(0xFFFFFF));
-    
+    //DrawLineAntialiasedWu(Point2D(50, 50), Point2D(400, 70));
+    //DrawLineBresenham(Point2D(50, 50+50), Point2D(400, 70+50), Color(0xFFFFFF));
+
+    //_clipping_rect.xmin = 100;
+    //_clipping_rect.xmax = 200;
+    //_clipping_rect.ymin = 100;
+    //_clipping_rect.ymax = 200;
+
+    //DrawCurrentMode();
+
+    //std::vector<Point2D> verts;
+    //verts.emplace_back(175, 130);
+    //verts.emplace_back(210, 120);
+    //verts.emplace_back(170, 90);
+    //verts.emplace_back(160, 110);
+
+    //FillPolygon(verts, Color(0x00FFFF));
+
     // render the Color buffer 
     RenderColorArray();
 
@@ -847,7 +862,7 @@ void DrawingAlgoApp::DrawBSpline(const std::vector<Point2D>& support_points) {
 void DrawingAlgoApp::DrawBSplineClosed(const std::vector<Point2D>& support_points) {
     const auto support_points_size = support_points.size(); // p
     const auto& polynom_degree     = _bspline_poly_degree; // n
-    const auto& knot_vector        = _bspline_knot_vector;
+    auto& knot_vector        = _bspline_knot_vector;
 
     const auto& n = polynom_degree;
     const int m   = support_points_size - 1; // m
@@ -1047,7 +1062,7 @@ void DrawingAlgoApp::FillRectangle(const Point2D p0, const Point2D p1) {
     }
 }
 
-void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
+void DrawingAlgoApp::FillTriangle(std::vector<Point2D> vertices) {
     DrawPoints(vertices, Color(0xFFFF00));
 
     if (vertices.size() >= 3) {
@@ -1108,7 +1123,9 @@ void DrawingAlgoApp::FillTriangle(std::vector<Point2D>& vertices) {
     }
 }
 
-void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Color& color) {
+void DrawingAlgoApp::FillPolygon(std::vector<Point2D> vertices, const Color& color) {
+    vertices = ClipPoly(vertices);
+    
     DrawPoints(vertices, Color(0, 255, 255));
 
     if (vertices.size() >= 3) {
@@ -1211,7 +1228,6 @@ void DrawingAlgoApp::FillPolygon(const std::vector<Point2D>& vertices, const Col
             // set Color within the spans of actives xs
             assert(actives.size() % 2 == 0);
             for (auto first_it = actives.cbegin(); first_it != actives.cend(); ++++first_it) {
-
                 auto second_it = first_it + 1;
 
                 auto& intersect1 = first_it->xs;
@@ -1304,52 +1320,112 @@ bool DrawingAlgoApp::ClipLine(Point2D &start, Point2D &end) const {
             auto& clip_code = startcode ? startcode : endcode;
             auto& clip_point = startcode ? start : end;
 
-
-            auto& xmin = _clipping_rect.xmin;
-            auto& xmax = _clipping_rect.xmax;
-            auto& ymin = _clipping_rect.ymin;
-            auto& ymax = _clipping_rect.ymax;
-
-            const auto LEFT = 8;
-            const auto RIGHT = 4;
-            const auto TOP = 2;
-            const auto BOTTOM = 1;
-
-            // points for the line to intersect
-            Point2D p0, p1;
-
-            if (clip_code & LEFT) {
-                // left line
-                p0 = Point2D(xmin, ymin);
-                p1 = Point2D(xmin, ymax);
-            }
-            else if (clip_code & RIGHT) {
-                // right line
-                p0 = Point2D(xmax, ymin);
-                p1 = Point2D(xmax, ymax);
-            }
-            else if (clip_code & TOP) {
-                // upper line
-                p0 = Point2D(xmin, ymin);
-                p1 = Point2D(xmax, ymin);
-            }
-            else if (clip_code & BOTTOM) {
-                // lower line
-                p0 = Point2D(xmin, ymax);
-                p1 = Point2D(xmax, ymax);
-            }
-            else {
-                assert(false);
-            }
-
-            auto intersection = GetLineIntersection(start, end, p0, p1);
-            clip_point = intersection;
+            if (clip_code & static_cast<int>(Side::Left))
+                clip_point = ClipLine(start, end, Side::Left);
+            else if (clip_code & static_cast<int>(Side::Right))
+                clip_point = ClipLine(start, end, Side::Right);
+            else if (clip_code & static_cast<int>(Side::Top))
+                clip_point = ClipLine(start, end, Side::Top);
+            else if (clip_code & static_cast<int>(Side::Bottom))
+                clip_point = ClipLine(start, end, Side::Bottom);
+            else
+                assert(!"clipping a line that is completely inside clipping rect?");
         }
     }
     return true;
 }
 
+Point2D DrawingAlgoApp::ClipLine(const Point2D &start, const Point2D &end, Side side) const {
+    auto& xmin = _clipping_rect.xmin;
+    auto& xmax = _clipping_rect.xmax;
+    auto& ymin = _clipping_rect.ymin;
+    auto& ymax = _clipping_rect.ymax;
 
+    // points for the line to intersect
+    Point2D p0, p1;
+
+    switch (side) {
+    case Side::Left:
+        // left line
+        p0 = Point2D(xmin, ymin);
+        p1 = Point2D(xmin, ymax);
+        break;
+    case Side::Right:
+        // right line
+        p0 = Point2D(xmax, ymin);
+        p1 = Point2D(xmax, ymax);
+        break;
+    case Side::Top:
+        // upper line
+        p0 = Point2D(xmin, ymin);
+        p1 = Point2D(xmax, ymin);
+        break;
+    case Side::Bottom:
+        // lower line
+        p0 = Point2D(xmin, ymax);
+        p1 = Point2D(xmax, ymax);
+        break;
+    }
+
+    return GetLineIntersection(start, end, p0, p1);
+}
+
+std::vector<Point2D> DrawingAlgoApp::ClipPoly(std::vector<Point2D> vertices) const {
+    std::vector<Side> sides;
+    sides.push_back(Side::Bottom);
+    sides.push_back(Side::Right);
+    sides.push_back(Side::Top);
+    sides.push_back(Side::Left);
+
+    // clip for all sides
+    for (const auto& side : sides) {
+        int side_code = static_cast<int>(side);
+        std::vector<Point2D> out_verts;
+
+        if (vertices.size() < 2)
+            return out_verts;
+
+        assert(vertices.size() > 1);
+        for (auto it0 = begin(vertices), it1 = begin(vertices) + 1; it0 != end(vertices); ++it0, ++it1) {
+            if (it1 == end(vertices))
+                it1 = begin(vertices);
+
+            auto start = *it0;
+            auto end = *it1;
+
+            auto outcode0 = ClippingOutcodeFor(start);
+            auto outcode1 = ClippingOutcodeFor(end);
+
+            // points completely inside clipping rect
+            if (outcode0 == 0 && outcode1 == 0) {
+                out_verts.push_back(end);
+                continue;
+            }
+
+            // are the points outside the current side?
+            if ((outcode0 & side_code) ||
+                (outcode1 & side_code)) {
+
+                if (outcode0 & outcode1)
+                    continue;
+
+                auto intersection = ClipLine(start, end, side);
+                out_verts.push_back(intersection);
+
+                // going from outside in
+                if (outcode0 != 0 && (outcode1 & side_code) == 0)
+                    out_verts.push_back(end);
+            }
+            else {
+                out_verts.push_back(end);
+            }
+        }
+
+        vertices = out_verts;
+    }
+
+    return vertices;
+}
 
 //
 // event handler
@@ -1637,6 +1713,8 @@ void DrawingAlgoApp::DrawCurrentMode() {
         break;
     case DrawingType::Pythagoras:
         DrawPythagoras();
+        break;
+    case DrawingType::SetClippingRect:
         break;
     default:
         assert(false);

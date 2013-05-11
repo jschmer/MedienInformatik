@@ -114,11 +114,20 @@ private:
     void DrawPythagoras();
 
     void FillRectangle(const Point2D p0, const Point2D p1);
-    void FillTriangle(std::vector<Point2D>& vertices);
-    void FillPolygon(const std::vector<Point2D>& vertices, const Color& color = Color(0, 255, 0));
+    void FillTriangle(std::vector<Point2D> vertices);
+    void FillPolygon(std::vector<Point2D> vertices, const Color& color = Color(0, 255, 0));
 
-    bool ClipLine(Point2D &start, Point2D &end) const;
+    enum class Side {
+        Bottom = 1,
+        Top = 2,
+        Right = 4,
+        Left = 8
+    };
+
     int ClippingOutcodeFor(Point2D p) const;
+    bool ClipLine(Point2D &start, Point2D &end) const;
+    Point2D ClipLine(const Point2D &start, const Point2D &end, Side side) const;
+    std::vector<Point2D> ClipPoly(std::vector<Point2D> vertices) const;
 
     void ApplyMatrix(glm::mat3 mat, std::vector<Point2D> &vertices) const;
 
