@@ -229,10 +229,10 @@ void DrawingAlgoApp::OnRender() {
     //DrawCurrentMode();
 
     //std::vector<Point2D> verts;
-    //verts.emplace_back(175, 130);
-    //verts.emplace_back(210, 120);
-    //verts.emplace_back(170, 90);
-    //verts.emplace_back(160, 110);
+    //verts.emplace_back(170, 80);
+    //verts.emplace_back(160, 150);
+    //verts.emplace_back(220, 180);
+    //verts.emplace_back(230, 90);
 
     //FillPolygon(verts, Color(0x00FFFF));
 
@@ -1391,30 +1391,27 @@ std::vector<Point2D> DrawingAlgoApp::ClipPoly(std::vector<Point2D> vertices) con
                 it1 = begin(vertices);
 
             auto start = *it0;
-            auto end = *it1;
+            auto end   = *it1;
 
             auto outcode0 = ClippingOutcodeFor(start);
             auto outcode1 = ClippingOutcodeFor(end);
 
-            // points completely inside clipping rect
-            if (outcode0 == 0 && outcode1 == 0) {
-                out_verts.push_back(end);
-                continue;
-            }
+            // is a point outside the current clipping side?
+            if ((outcode0 & side_code) 
+                || (outcode1 & side_code)) {
 
-            // are the points outside the current side?
-            if ((outcode0 & side_code) ||
-                (outcode1 & side_code)) {
-
-                if (outcode0 & outcode1)
+                // both outside? discard this edge
+                if ((outcode0 & side_code) == (outcode1 & side_code))
                     continue;
 
                 auto intersection = ClipLine(start, end, side);
                 out_verts.push_back(intersection);
 
                 // going from outside in
-                if (outcode0 != 0 && (outcode1 & side_code) == 0)
+                if ((outcode0 & side_code) != 0
+                    && (outcode1 & side_code) == 0) {
                     out_verts.push_back(end);
+                }
             }
             else {
                 out_verts.push_back(end);
