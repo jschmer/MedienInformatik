@@ -46,7 +46,8 @@ class DrawingAlgoApp : public SFMLApp {
         FillTriangle,
         FillPolygon,
         Pythagoras,
-        SetClippingRect
+        SetClippingRect,
+        BouncingRect
     };
 
     enum class TransformationType {
@@ -61,6 +62,24 @@ class DrawingAlgoApp : public SFMLApp {
     struct ClippingRectangle {
         int xmin, xmax;
         int ymin, ymax;
+    };
+
+    struct BouncingRect {
+        float x, y;
+        float xstep, ystep;
+
+        float scale;
+        float scale_step;
+
+        float rotate_angle;
+        float rotate_step;
+
+        BouncingRect()
+            : x(0.f), y(0.f),
+            xstep(.015f), ystep(.010f),
+            scale(1.f), scale_step(.01f),
+            rotate_angle(0.f), rotate_step(1.f)
+        {}
     };
 
     // DrawingAlgoApp declaration
@@ -112,10 +131,12 @@ private:
     void DrawBSplineClosed(const std::vector<Point2D>& support_points);
     void DrawCatmulRomSpline(const std::vector<Point2D>& support_points);
     void DrawPythagoras();
-
+    
     void FillRectangle(const Point2D p0, const Point2D p1);
     void FillTriangle(std::vector<Point2D> vertices);
     void FillPolygon(std::vector<Point2D> vertices, const Color& color = Color(0, 255, 0));
+
+    void RenderBouncingRect();
 
     enum class Side {
         Bottom = 1,
@@ -136,6 +157,8 @@ private:
 private:
     static const int width  = 1200;
     static const int height = 800;
+
+    BouncingRect _bouncing_rect;
 
     ClippingRectangle _clipping_rect;
     std::vector<Point2D> _vertices;

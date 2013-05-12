@@ -112,7 +112,7 @@ Color Color::operator +(Color other) {
 //
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
-    : Super(width, height, "Drawing Algorithms", sf::Style::Close),
+    : Super(width, height, "Drawing Algorithms", sf::Style::Default),
     _num_Colors(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
@@ -191,6 +191,7 @@ Modes:
 9 = Fill Triangle
 0 = Fill Polygon
 P = Pythagoras
+B = Bouncing Rectangle
 O = Set Clipping Rect
 
 F1 = Toggle Antialiasing
@@ -218,26 +219,15 @@ Z = Set Transformation Origin
 }
 
 void DrawingAlgoApp::OnRender() {
-    //DrawLineAntialiasedWu(Point2D(50, 50), Point2D(400, 70));
-    //DrawLineBresenham(Point2D(50, 50+50), Point2D(400, 70+50), Color(0xFFFFFF));
-
-    //_clipping_rect.xmin = 100;
-    //_clipping_rect.xmax = 200;
-    //_clipping_rect.ymin = 100;
-    //_clipping_rect.ymax = 200;
-
-    //DrawCurrentMode();
-
-    //std::vector<Point2D> verts;
-    //verts.emplace_back(170, 80);
-    //verts.emplace_back(160, 150);
-    //verts.emplace_back(220, 180);
-    //verts.emplace_back(230, 90);
-
-    //FillPolygon(verts, Color(0x00FFFF));
+    DrawLineAntialiasedWu(Point2D(50, 50), Point2D(400, 300));
+    DrawLineBresenham(Point2D(50+50, 50), Point2D(400+50, 300), Color(0xFFFFFF));
 
     // render the Color buffer 
     RenderColorArray();
+
+    // render bouncing rectangle
+    if (_draw_type == DrawingType::BouncingRect)
+        RenderBouncingRect();
 
     // render "HUD"
     Super::RenderHelpText();
@@ -282,6 +272,9 @@ void DrawingAlgoApp::RenderCurrentMode() {
         break;
     case DrawingType::SetClippingRect:
         title += "Setting Clipping Rectangle";
+        break;
+    case DrawingType::BouncingRect:
+        title += "Bouncing Rectangle";
         break;
     default:
         title += "Not implemented! Baka!";
@@ -1289,6 +1282,49 @@ void DrawingAlgoApp::DrawPythagoras() {
     }
 }
 
+void DrawingAlgoApp::RenderBouncingRect() {
+    auto& x = _bouncing_rect.x;
+    auto& y = _bouncing_rect.y;
+    auto& xstep = _bouncing_rect.xstep;
+    auto& ystep = _bouncing_rect.ystep;
+    auto& scale = _bouncing_rect.scale;
+    auto& scale_step = _bouncing_rect.scale_step;
+
+    // translating
+    if (x > 1 - .25 || x < -1 + .25)
+        xstep = -xstep;
+    if (y > 1 - .25 || y < -1 + .25)
+        ystep = -ystep;
+
+    x += xstep;
+    y += ystep;
+
+    // scaling
+    if (scale < .2f || scale > 1.4f)
+        scale_step = -scale_step;
+
+    scale += scale_step;
+
+    // rotating
+    _bouncing_rect.rotate_angle += _bouncing_rect.rotate_step;
+
+    // drawing
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0f, 0.0f, 0.0f);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(x, y, 0);
+
+    glScalef(scale, scale, 1);
+
+    glRotatef(_bouncing_rect.rotate_angle, 0, 0, 1);
+
+    glRectf(-0.25f, -0.25f, 0.25f, 0.25f);
+
+    glFlush();
+}
+
 int DrawingAlgoApp::ClippingOutcodeFor(Point2D p) const {
     const auto epsi = 0.001;
 
@@ -1566,6 +1602,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
     case Key::P:
         _draw_type = DrawingType::Pythagoras;
         break;
+    case Key::B:
+        _draw_type = DrawingType::BouncingRect;
+        break;
     case Key::F1:
         _antialiase = !_antialiase;
         break;
@@ -1655,6 +1694,7 @@ void DrawingAlgoApp::DrawCurrentMode() {
 
     switch (_draw_type) {
     case DrawingType::None:
+    case DrawingType::BouncingRect: // see OnRender()
         break;
     case DrawingType::Line:
         // draw every vertex pair
