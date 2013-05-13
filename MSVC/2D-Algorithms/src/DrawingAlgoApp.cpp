@@ -112,7 +112,7 @@ Color Color::operator +(Color other) {
 //
 // DrawingAlgoApp class definition
 DrawingAlgoApp::DrawingAlgoApp()
-    : Super(width, height, "Drawing Algorithms", sf::Style::Default),
+    : Super(width, height, "Drawing Algorithms", sf::Style::Close),
     _num_Colors(_width*_height),
     _draw_type(DrawingType::None),
     _mouse_pos_cache(0, 0),
@@ -219,10 +219,6 @@ Z = Set Transformation Origin
 }
 
 void DrawingAlgoApp::OnRender() {
-    DrawLineAntialiasedWu(Point2D(50, 50), Point2D(400, 300));
-    DrawLineBresenham(Point2D(50+50, 50), Point2D(400+50, 300), Color(0xFFFFFF));
-
-
     // render bouncing rectangle
     if (_draw_type == DrawingType::BouncingRect)
         RenderBouncingRect();
@@ -479,6 +475,9 @@ void DrawingAlgoApp::SaveAsPPM(const char* filename) {
 void DrawingAlgoApp::DrawLineBresenham(Point2D p0, Point2D p1, const Color& color) {
     if (ClipLine(p0, p1) == false)
         return;
+
+    if (_antialiase)
+        return DrawLineAntialiasedWu(p0, p1, color);
     
     // Startpunkt
     int x = p0.x;
@@ -587,24 +586,24 @@ void DrawingAlgoApp::DrawLineAntialiasedWu(Point2D p0, Point2D p1, const Color& 
     //    plot(ypxl1,   xpxl1, rfpart(yend) * xgap)
     //    plot(ypxl1+1, xpxl1,  fpart(yend) * xgap)
         auto param3 = (1 - fract_part(yend)) * xgap;
-        auto col = param3 * 255;
-        this->SetColor(ypxl1,   xpxl1, Color(col, col, col));
+        auto col = param3 * color;
+        this->SetColor(ypxl1,   xpxl1, col);
 
         param3 = fract_part(yend) * xgap;
-        col = param3 * 255;
-        this->SetColor(ypxl1+1, xpxl1, Color(col, col, col));
+        col = param3 * color;
+        this->SetColor(ypxl1+1, xpxl1, col);
     }
     //else
     else {
     //    plot(xpxl1, ypxl1  , rfpart(yend) * xgap)
     //    plot(xpxl1, ypxl1+1,  fpart(yend) * xgap)
         auto param3 = (1 - fract_part(yend)) * xgap;
-        auto col = param3 * 255;
-        this->SetColor(xpxl1, ypxl1,   Color(col, col, col));
+        auto col = param3 * color;
+        this->SetColor(xpxl1, ypxl1,   col);
 
         param3 = fract_part(yend) * xgap;
-        col = param3 * 255;
-        this->SetColor(xpxl1, ypxl1+1, Color(col, col, col));
+        col = param3 * color;
+        this->SetColor(xpxl1, ypxl1+1, col);
     }
     //end if
 
@@ -631,24 +630,24 @@ void DrawingAlgoApp::DrawLineAntialiasedWu(Point2D p0, Point2D p1, const Color& 
     //    plot(ypxl2  , xpxl2, rfpart(yend) * xgap)
     //    plot(ypxl2+1, xpxl2,  fpart(yend) * xgap)
         auto param3 = (1 - fract_part(yend)) * xgap;
-        auto col = param3 * 255;
-        SetColor(ypxl2,   xpxl2, Color(col, col, col));
+        auto col = param3 * color;
+        SetColor(ypxl2,   xpxl2, col);
 
         param3 = fract_part(yend) * xgap;
-        col = param3 * 255;
-        SetColor(ypxl2+1, xpxl2, Color(col, col, col));
+        col = param3 * color;
+        SetColor(ypxl2+1, xpxl2, col);
     }
     else {
     //else
     //    plot(xpxl2, ypxl2,  rfpart(yend) * xgap)
     //    plot(xpxl2, ypxl2+1, fpart(yend) * xgap)
         auto param3 = (1 - fract_part(yend)) * xgap;
-        auto col = param3 * 255;
-        SetColor(xpxl2, ypxl2,   Color(col, col, col));
+        auto col = param3 * color;
+        SetColor(xpxl2, ypxl2,   col);
 
         param3 = fract_part(yend) * xgap;
-        col = param3 * 255;
-        SetColor(xpxl2, ypxl2+1, Color(col, col, col));
+        col = param3 * color;
+        SetColor(xpxl2, ypxl2+1, col);
     }
     //end if
 
@@ -661,24 +660,24 @@ void DrawingAlgoApp::DrawLineAntialiasedWu(Point2D p0, Point2D p1, const Color& 
     //        plot(ipart(intery)  , x, rfpart(intery))
     //        plot(ipart(intery)+1, x,  fpart(intery))
             auto param3 = (1 - fract_part(intery)) * xgap;
-            auto col = param3 * 255;
-            SetColor(int_part(intery),   x, Color(col, col, col));
+            auto col = param3 * color;
+            SetColor(int_part(intery),   x, col);
 
             param3 = fract_part(intery) * xgap;
-            col = param3 * 255;
-            SetColor(int_part(intery)+1, x, Color(col, col, col));
+            col = param3 * color;
+            SetColor(int_part(intery)+1, x, col);
         }
         else {
     //    else
     //        plot(x, ipart (intery),  rfpart(intery))
     //        plot(x, ipart (intery)+1, fpart(intery))
             auto param3 = (1 - fract_part(intery)) * xgap;
-            auto col = param3 * 255;
-            SetColor(x, int_part(intery),   Color(col, col, col));
+            auto col = param3 * color;
+            SetColor(x, int_part(intery),   col);
 
             param3 = fract_part(intery) * xgap;
-            col = param3 * 255;
-            SetColor(x, int_part(intery)+1, Color(col, col, col));
+            col = param3 * color;
+            SetColor(x, int_part(intery)+1, col);
         }
     //    end if
     //    intery := intery + gradient
