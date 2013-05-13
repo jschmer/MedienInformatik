@@ -222,12 +222,14 @@ void DrawingAlgoApp::OnRender() {
     DrawLineAntialiasedWu(Point2D(50, 50), Point2D(400, 300));
     DrawLineBresenham(Point2D(50+50, 50), Point2D(400+50, 300), Color(0xFFFFFF));
 
-    // render the Color buffer 
-    RenderColorArray();
 
     // render bouncing rectangle
     if (_draw_type == DrawingType::BouncingRect)
         RenderBouncingRect();
+    // render the Color buffer 
+    else
+        RenderColorArray();
+
 
     // render "HUD"
     Super::RenderHelpText();
