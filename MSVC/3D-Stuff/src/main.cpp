@@ -5,7 +5,9 @@
  */
 #include <OpenGLApp.h>
 
-int main() {
-    OpenGLApp app;
+#include <Freeglut/glut.h>
+
+int main(int argc, char* argv[]) {
+    OpenGLApp app(&argc, argv);
     return app.Run();
 }

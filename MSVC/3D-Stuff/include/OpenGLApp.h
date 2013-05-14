@@ -10,5 +10,11 @@
 class OpenGLApp : public SFMLApp {
     typedef SFMLApp Super;
 
+public:
+    OpenGLApp(int* argc, char** argv);
 
+    // render loop hook
+    void OnRender();
+
+    void UtahTeapot();
 };

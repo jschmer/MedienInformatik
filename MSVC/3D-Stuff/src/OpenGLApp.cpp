@@ -7,3 +7,21 @@
 
 #include <cassert>
 
+#include <Freeglut/glut.h>
+
+OpenGLApp::OpenGLApp(int* argc, char** argv) {
+    glutInit(argc, argv);
+}
+
+void OpenGLApp::OnRender() {
+    UtahTeapot();
+
+    // render "HUD"
+    Super::RenderHelpText();
+    Super::RenderFPS();
+    Super::RenderMousePos();
+}
+
+void OpenGLApp::UtahTeapot() {
+    glutWireTeapot(.5);
+}
