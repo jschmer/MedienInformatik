@@ -156,7 +156,7 @@ private:
     // data
 private:
     static const int width  = 1200;
-    static const int height = 800;
+    static const int height = 700;
 
     BouncingRect _bouncing_rect;
 
