@@ -52,7 +52,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(Projectdir)\..\..\extlib\SFML\include\;$(Projectdir)\..\SFMLApp\include\;$(Projectdir)\include\;$(Projectdir)\..\..\extlib\Freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Projectdir)\..\..\extlib\glm;$(Projectdir)\..\..\extlib\SFML\include\;$(Projectdir)\..\SFMLApp\include\;$(Projectdir)\include\;$(Projectdir)\..\..\extlib\Freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>FREEGLUT_STATIC;_DEBUG;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -76,7 +76,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(Projectdir)\..\..\extlib\SFML\include;$(Projectdir)\..\SFMLApp\include;$(Projectdir)\include\;$(Projectdir)\..\..\extlib\Freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(Projectdir)\..\..\extlib\glm;$(Projectdir)\..\..\extlib\SFML\include;$(Projectdir)\..\SFMLApp\include;$(Projectdir)\include\;$(Projectdir)\..\..\extlib\Freeglut\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>FREEGLUT_STATIC;NDEBUG;SFML_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
