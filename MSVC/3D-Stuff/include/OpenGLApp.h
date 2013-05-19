@@ -5,9 +5,11 @@
  */
 #pragma once
 
+#include <cassert>
+
 #include <SFMLApp.h>
 
-#include <glm/glm.hpp>
+#include <Teapot.h>
 
 class OpenGLApp : public SFMLApp {
     typedef SFMLApp Super;
@@ -20,10 +22,8 @@ public:
 
     // event hooks
     virtual void OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) override;
-
-    // render functions
-    void UtahTeapot();
+    virtual void OnResized(uint width, uint height) override;
 
 private:
-    glm::mat4 _rotation_mat_user_input;
+    Teapot _teapot;
 };

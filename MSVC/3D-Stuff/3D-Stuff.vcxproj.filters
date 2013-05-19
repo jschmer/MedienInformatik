@@ -21,9 +21,15 @@
     <ClCompile Include="src\OpenGLApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Teapot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\OpenGLApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Teapot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

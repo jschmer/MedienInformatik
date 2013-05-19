@@ -1,0 +1,25 @@
+#include <SFMLApp.h>
+#include <glm/glm.hpp>
+
+class Teapot {
+public:
+    Teapot();
+    void render();
+
+    // keyboard events
+    sf::String HelpInfo() const;
+    void OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system);
+
+    // other events
+    void OnResized(uint width, uint height);
+
+private:
+    void SetProjectionPerspective();
+    void SetProjectionParallel();
+
+private:
+    glm::mat4 _rotation_mat_user_input;
+    uint _width, _height;
+    bool _perspective;
+    double _near, _far;
+};
