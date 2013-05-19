@@ -40,7 +40,7 @@ public:
     // helper functions
 protected:
     bool InitFont(const char* font_path = "geo_1.ttf");
-    void RenderHelpText();
+    void RenderHelpText(sf::String additional = "");
     void RenderScene();
     void RenderFPS();
     void RenderMousePos();

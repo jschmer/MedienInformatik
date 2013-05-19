@@ -25,8 +25,8 @@ SFMLApp::SFMLApp()
 SFMLApp::SFMLApp(uint width, uint height, const char* app_name, uint style, sf::ContextSettings gl_context)
     : _running(true),
     _show_help(false),
-    _show_fps(false),
-    _show_mouse_pos(true),
+    _show_fps(true),
+    _show_mouse_pos(false),
     _fps(0),
     _frametime(0.f),
     _fps_clock(),
@@ -137,7 +137,7 @@ void SFMLApp::OnCleanup() {
 
 ///////////////////////////////////////////////////////////
 // Drawing text
-void SFMLApp::RenderHelpText()
+void SFMLApp::RenderHelpText(sf::String additional)
 {   
     // preserve opengl states! if you don't do this, the text will overwrite
     // everything else we told opengl earlier! (like drawing a triangle)
@@ -147,8 +147,11 @@ void SFMLApp::RenderHelpText()
     _window.draw(_help_info);
 
     // toggled by OnKeyReleased() event
-    if (_show_help)
-        _window.draw(_help_text);
+    if (_show_help) {
+        auto help_copy = _help_text;
+        help_copy.setString(_help_text.getString() + additional);
+        _window.draw(help_copy);
+    }
 
     _window.popGLStates();
 }
@@ -196,7 +199,7 @@ void SFMLApp::RenderFPS()
 
         // generate a SFML text for rendering
         _fps_text.setString(fps_str);
-        _fps_text.setPosition(4, static_cast<float>(_window.getSize().y - 40u));
+        _fps_text.setPosition(4, static_cast<float>(_window.getSize().y - 20u));
 
         // reset fps and clock
         _fps = 0;
@@ -245,7 +248,7 @@ void SFMLApp::RenderMousePos() {
 
     // generate a SFML text for rendering
     _mouse_pos.setString(mouse_pos_str);
-    _mouse_pos.setPosition(4, static_cast<float>(_window.getSize().y - 20u));
+    _mouse_pos.setPosition(4, static_cast<float>(_window.getSize().y - 40u));
 
     if (_show_mouse_pos) {
         // draw the mouse position text
