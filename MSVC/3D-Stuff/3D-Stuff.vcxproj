@@ -99,12 +99,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="include\Robot.cpp" />
     <ClCompile Include="src\OpenGLApp.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Teapot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\OpenGLApp.h" />
+    <ClInclude Include="include\Robot.h" />
     <ClInclude Include="include\Teapot.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

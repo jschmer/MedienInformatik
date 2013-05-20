@@ -24,12 +24,18 @@
     <ClCompile Include="src\Teapot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="include\Robot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\OpenGLApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Teapot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Robot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

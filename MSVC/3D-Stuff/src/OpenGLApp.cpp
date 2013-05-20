@@ -12,7 +12,8 @@ OpenGLApp::OpenGLApp(int* argc, char** argv) {
 }
 
 void OpenGLApp::OnRender() {
-    _teapot.render();
+    //_teapot.render();
+    _robot.render();
 
     // render "HUD"
     Super::RenderHelpText(_teapot.HelpInfo());
@@ -21,9 +22,12 @@ void OpenGLApp::OnRender() {
 }
 
 void OpenGLApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) {
-    _teapot.OnKeyPressed(key, ctrl, alt, shift, system);
+    //_teapot.OnKeyPressed(key, ctrl, alt, shift, system);
 }
 
 void OpenGLApp::OnResized(uint width, uint height) {
-    _teapot.OnResized(width, height);
+    Super::OnResized(width, height);
+
+    //_teapot.OnResized(width, height);
+    _robot.OnResized(width, height);
 }

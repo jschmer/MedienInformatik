@@ -1,7 +1,7 @@
 /* 
  * Copyright (c) 2013 Jens Schmer
  * This file is distributed under the MIT License.
- * Consult COPYING within this package for further information. 
+ * See COPYING within this package for further information. 
  */
 #pragma once
 
@@ -10,6 +10,7 @@
 #include <SFMLApp.h>
 
 #include <Teapot.h>
+#include <Robot.h>
 
 class OpenGLApp : public SFMLApp {
     typedef SFMLApp Super;
@@ -26,4 +27,5 @@ public:
 
 private:
     Teapot _teapot;
+    Robot _robot;
 };
