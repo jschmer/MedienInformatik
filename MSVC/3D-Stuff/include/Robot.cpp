@@ -84,8 +84,17 @@ Robot::~Robot()
 {
 }
 
+sf::String Robot::HelpInfo() const {
+    const auto append_text = "\n"
+        "Robot \\o/"
+        ""
+        ""
+        "";
+
+    return append_text;
+}
+
 void Robot::render() {
-    glClearColor(0, 0, 0, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 

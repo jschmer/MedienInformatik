@@ -16,6 +16,7 @@ void Teapot::render() {
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(&_rotation_mat_user_input[0][0]);
 
+    glColor3f(1.f, 1.f, 1.f);
     glutWireTeapot(.5);
 }
 
