@@ -8,12 +8,10 @@
 
 #include <glm/glm.hpp>
 
-#include <SFMLApp.h>
 #include <SFML/OpenGL.hpp>
+#include <SFMLApp.h>
 
-struct Camera {
-    glm::vec3 eye, center, up;
-};
+#include <Camera.h>
 
 class Robot
 {

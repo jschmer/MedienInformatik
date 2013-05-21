@@ -7,6 +7,8 @@
 
 #include <cassert>
 
+#include <glm/glm.hpp>
+
 #include <SFMLApp.h>
 
 #include <Teapot.h>

@@ -4,8 +4,11 @@
  * See COPYING within this package for further information. 
  */
 #pragma once
-#include <SFMLApp.h>
 #include <glm/glm.hpp>
+
+#include <SFMLApp.h>
+
+#include <Camera.h>
 
 class Teapot {
 public:
@@ -24,6 +27,8 @@ private:
     void SetProjectionParallel();
 
 private:
+    Camera _camera;
+
     glm::mat4 _rotation_mat_user_input;
     uint _width, _height;
     bool _perspective;

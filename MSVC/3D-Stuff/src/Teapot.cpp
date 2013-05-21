@@ -3,6 +3,8 @@
 #include <Freeglut/glut.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+using glm::vec3;
+
 Teapot::Teapot()
     : _rotation_mat_user_input(1.f),
     _perspective(true),
@@ -10,11 +12,25 @@ Teapot::Teapot()
     _height(400),
     _near(1),
     _far(1000)
-{}
+{
+    // setting up default camera
+    _camera.eye    = vec3(0, 0, 5);
+    _camera.center = vec3(0, 0, 0);
+    _camera.up     = vec3(0, 1, 0);
+}
 
 void Teapot::render() {
     glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(&_rotation_mat_user_input[0][0]);
+    glLoadIdentity();
+
+    if (_perspective) {
+        auto& eye    = _camera.eye;
+        auto& center = _camera.center;
+        auto& up     = _camera.up;
+        gluLookAt(eye[0], eye[1], eye[2], center[0], center[1], center[2], up[0], up[1], up[2]);
+    }
+
+    glMultMatrixf(&_rotation_mat_user_input[0][0]);
 
     glColor3f(1.f, 1.f, 1.f);
     glutWireTeapot(.5);
@@ -46,34 +62,30 @@ void Teapot::OnResized(uint width, uint height) {
 }
 
 void Teapot::SetProjectionPerspective() {
+    _near = 1;
+    _far  = 1000;
+
     // Set the correct perspective.
-    auto fovy = 100.0;
+    auto fovy = 60.0;
     auto ratio = 1.0 * _width / _height;
     gluPerspective(fovy, ratio, _near, _far);
 
-    const double eye[]    = {0.0, 0.0, 2.0};
-    const double center[] = {0.0, 0.0, 0.0};
-    const double up[]     = {0.0, 1.0, 0.0};
-
-    // setting camera
-    gluLookAt(eye[0], eye[1], eye[2], center[0], center[1], center[2], up[0], up[1], up[2]);
+    _camera.eye    = vec3(0, 0, 2);
+    _camera.center = vec3(0, 0, 0);
+    _camera.up     = vec3(0, 1, 0);
 }
 
 void Teapot::SetProjectionParallel() {
+    _near = -5;
+    _far  = 5; 
+   
     // Set the correct perspective.
     auto ar = 1.0 * _width / _height;
 
     if(_width <= _height)
-        glOrtho(-1.0, 1.0, -1.0/ar, 1.0/ar, 1.0, -1.0);
+        glOrtho(-1.0, 1.0, -1.0/ar, 1.0/ar, _near, _far);
     else
-        glOrtho(-1.0*ar, 1.0*ar, -1.0, 1.0, 1.0, -1.0);
-
-    const double eye[]    = {0.0, 0.0, 1.0};
-    const double center[] = {0.0, 0.0, 0.0};
-    const double up[]     = {0.0, 1.0, 0.0};
-
-    // setting camera
-    gluLookAt(eye[0], eye[1], eye[2], center[0], center[1], center[2], up[0], up[1], up[2]);
+        glOrtho(-1.0*ar, 1.0*ar, -1.0, 1.0, _near, _far);
 }
 
 sf::String Teapot::HelpInfo() const {

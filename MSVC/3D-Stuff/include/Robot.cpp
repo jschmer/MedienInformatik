@@ -12,28 +12,34 @@ std::vector<GLfloat> produceQuad(float width, float height, float depth) {
     auto& d = depth;
     
     const GLfloat vertices[] = {
+        // left
         0, 0, 0,
         0, h, 0,
         0, 0, d,
-        0, h, d, // left
+        0, h, d, 
 
+        // front
         w, 0, d,
-        w, h, d, // front
+        w, h, d, 
 
+        // right
         w, 0, 0,
-        w, h, 0, // right
+        w, h, 0, 
 
+        // back
         0, 0, 0,
-        0, h, 0, // back
+        0, h, 0, 
 
+        // top, seperate quad!
         0, h, d,
         0, h, 0,
         w, h, 0,
-        w, h, d, // top, seperate quad!
+        w, h, d,
 
-        0, 0, d,
+        // bottom, seperate quad!
+        w, 0, 0,
         0, 0, 0,
-        w, 0, 0, // bottom, seperate quad!
+        0, 0, d,
         w, 0, d
     };
     return std::vector<GLfloat>(std::begin(vertices), std::end(vertices));
@@ -42,7 +48,7 @@ std::vector<GLfloat> produceQuad(float width, float height, float depth) {
 Robot::Robot()
 {
     // setting up default camera
-    _camera.eye    = vec3(0, 2, 5);
+    _camera.eye    = vec3(0, 2, 4);
     _camera.center = vec3(0, 1, 0);
     _camera.up     = vec3(0, 1, 0);
 
@@ -98,9 +104,9 @@ void Robot::render() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    gluLookAt(  _camera.eye[0], _camera.eye[1], _camera.eye[2], 
-                _camera.center[0], _camera.center[1], _camera.center[2], 
-                _camera.up[0], _camera.up[1], _camera.up[2]);
+    // view matrix
+    auto lookAt = glm::lookAt(_camera.eye, _camera.center, _camera.up);
+    glMultMatrixf(&lookAt[0][0]);
 
     glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -207,15 +213,15 @@ void Robot::OnResized(uint width, uint height) {
     // (you cant make a window of zero height).
     height = std::max(height, 1u);
 
+    // Set the viewport to be the entire window
+    glViewport(0, 0, width, height);
+
     // Use the Projection Matrix
     glMatrixMode(GL_PROJECTION);
     // Reset Matrix
     glLoadIdentity();
 
-    // Set the viewport to be the entire window
-    glViewport(0, 0, width, height);
-
-    auto fovy = 45;
+    auto fovy  = 45;
     auto ratio = 1.0 * width / height;
     gluPerspective(fovy, ratio, 1, 1000);
 
