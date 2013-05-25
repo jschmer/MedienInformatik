@@ -102,7 +102,11 @@ UI - right hand rot
 JK - right lower arm rot
 M, - right upper arm rot
 
-IJKL - camera translation
+Arrows - camera translation
+
+Robot translation:
+o Shift & Arrows
+o Shift & +/-
 )";
 
     return append_text;
@@ -262,93 +266,129 @@ void Robot::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift,
 
     glm::vec3 v;
 
-    switch (key) {
-    // QW for left hand rotation
-    case Key::Q:
-        // rotate object upwards
-         v = glm::vec3(1, 0, 0);
-        _left_hand_transform = glm::rotate(_left_hand_transform, rotate_angle_delta, v);
-        break;
-    case Key::W:
-        // rotate object left
-        v = glm::vec3(1, 0, 0);
-        _left_hand_transform = glm::rotate(_left_hand_transform, -rotate_angle_delta, v);
-        break;
+    if (shift) {
+        switch (key) {
+        case Key::Left:
+            // translate robot left
+             v = glm::vec3(-1, 0, 0);
+            _base_transform = glm::translate(_base_transform, translate_length_delta*v);
+            break;
+        case Key::Right:
+            // translate robot right
+            v = glm::vec3(1, 0, 0);
+            _base_transform = glm::translate(_base_transform, translate_length_delta*v);
+            break;
+        case Key::Up:
+            // translate robot up
+            v = glm::vec3(0, 1, 0);
+            _base_transform = glm::translate(_base_transform, translate_length_delta*v);
+            break;
+        case Key::Down:
+            // translate robot down
+            v = glm::vec3(0, -1, 0);
+            _base_transform = glm::translate(_base_transform, translate_length_delta*v);
+            break;
+        case Key::Add:
+            // translate robot closer
+            v = glm::vec3(0, 0, 1);
+            _base_transform = glm::translate(_base_transform, translate_length_delta*v);
+            break;
+        case Key::Subtract:
+            // translate robot away
+            v = glm::vec3(0, 0, -1);
+            _base_transform = glm::translate(_base_transform, translate_length_delta*v);
+            break;
+        }
+    }
+    else {
+        switch (key) {
+        // QW for left hand rotation
+        case Key::Q:
+            // rotate object upwards
+             v = glm::vec3(1, 0, 0);
+            _left_hand_transform = glm::rotate(_left_hand_transform, rotate_angle_delta, v);
+            break;
+        case Key::W:
+            // rotate object left
+            v = glm::vec3(1, 0, 0);
+            _left_hand_transform = glm::rotate(_left_hand_transform, -rotate_angle_delta, v);
+            break;
 
-    // AS for left lower arm rotation
-    case Key::A:
-        // rotate object downwards
-        v = glm::vec3(0, 1, 0);
-        _left_lower_arm_transform = glm::rotate(_left_lower_arm_transform, -rotate_angle_delta, v);
-        break;
-    case Key::S:
-        // rotate object right
-        v = glm::vec3(0, 1, 0);
-        _left_lower_arm_transform = glm::rotate(_left_lower_arm_transform, rotate_angle_delta, v);
-        break;
+        // AS for left lower arm rotation
+        case Key::A:
+            // rotate object downwards
+            v = glm::vec3(0, 1, 0);
+            _left_lower_arm_transform = glm::rotate(_left_lower_arm_transform, rotate_angle_delta, v);
+            break;
+        case Key::S:
+            // rotate object right
+            v = glm::vec3(0, 1, 0);
+            _left_lower_arm_transform = glm::rotate(_left_lower_arm_transform, -rotate_angle_delta, v);
+            break;
 
-    // YX for left upper arm rotation
-    case Key::Y:
-        // translate object upwards
-         v = glm::vec3(0, 1, 0);
-        _left_upper_arm_transform = glm::rotate(_left_upper_arm_transform, rotate_angle_delta, v);
-        break;
-    case Key::X:
-        v = glm::vec3(0, 1, 0);
-        _left_upper_arm_transform = glm::rotate(_left_upper_arm_transform, -rotate_angle_delta, v);
-        break;
+        // YX for left upper arm rotation
+        case Key::Y:
+            // translate object upwards
+             v = glm::vec3(0, 1, 0);
+            _left_upper_arm_transform = glm::rotate(_left_upper_arm_transform, rotate_angle_delta, v);
+            break;
+        case Key::X:
+            v = glm::vec3(0, 1, 0);
+            _left_upper_arm_transform = glm::rotate(_left_upper_arm_transform, -rotate_angle_delta, v);
+            break;
 
-    // UI for right hand rotation
-    case Key::U:
-        // rotate object upwards
-         v = glm::vec3(1, 0, 0);
-        _right_hand_transform = glm::rotate(_right_hand_transform, rotate_angle_delta, v);
-        break;
-    case Key::I:
-        // rotate object right
-        v = glm::vec3(1, 0, 0);
-        _right_hand_transform = glm::rotate(_right_hand_transform, -rotate_angle_delta, v);
-        break;
+        // UI for right hand rotation
+        case Key::U:
+            // rotate object upwards
+             v = glm::vec3(1, 0, 0);
+            _right_hand_transform = glm::rotate(_right_hand_transform, rotate_angle_delta, v);
+            break;
+        case Key::I:
+            // rotate object right
+            v = glm::vec3(1, 0, 0);
+            _right_hand_transform = glm::rotate(_right_hand_transform, -rotate_angle_delta, v);
+            break;
 
-    // JK for right lower arm rotation
-    case Key::J:
-        // rotate object downwards
-        v = glm::vec3(0, 1, 0);
-        _right_lower_arm_transform = glm::rotate(_right_lower_arm_transform, -rotate_angle_delta, v);
-        break;
-    case Key::K:
-        // rotate object right
-        v = glm::vec3(0, 1, 0);
-        _right_lower_arm_transform = glm::rotate(_right_lower_arm_transform, rotate_angle_delta, v);
-        break;
+        // JK for right lower arm rotation
+        case Key::J:
+            // rotate object downwards
+            v = glm::vec3(0, 1, 0);
+            _right_lower_arm_transform = glm::rotate(_right_lower_arm_transform, rotate_angle_delta, v);
+            break;
+        case Key::K:
+            // rotate object right
+            v = glm::vec3(0, 1, 0);
+            _right_lower_arm_transform = glm::rotate(_right_lower_arm_transform, -rotate_angle_delta, v);
+            break;
 
-    // M; for right upper arm rotation
-    case Key::M:
-        // translate object upwards
-         v = glm::vec3(0, 1, 0);
-        _right_upper_arm_transform = glm::rotate(_right_upper_arm_transform, rotate_angle_delta, v);
-        break;
-    case Key::Comma:
-        v = glm::vec3(0, 1, 0);
-        _right_upper_arm_transform = glm::rotate(_right_upper_arm_transform, -rotate_angle_delta, v);
-        break;
+        // M; for right upper arm rotation
+        case Key::M:
+            // translate object upwards
+             v = glm::vec3(0, 1, 0);
+            _right_upper_arm_transform = glm::rotate(_right_upper_arm_transform, rotate_angle_delta, v);
+            break;
+        case Key::Comma:
+            v = glm::vec3(0, 1, 0);
+            _right_upper_arm_transform = glm::rotate(_right_upper_arm_transform, -rotate_angle_delta, v);
+            break;
 
-    // Arrows for camera translation
-    case Key::Up:
-        translateCamera(Direction::Up);
-        break;
-    case Key::Left:
-        translateCamera(Direction::Left);
-        break;
-    case Key::Down:
-        translateCamera(Direction::Down);
-        break;
-    case Key::Right:
-        translateCamera(Direction::Right);
-        break;
+        // Arrows for camera translation
+        case Key::Up:
+            translateCamera(Direction::Up);
+            break;
+        case Key::Left:
+            translateCamera(Direction::Left);
+            break;
+        case Key::Down:
+            translateCamera(Direction::Down);
+            break;
+        case Key::Right:
+            translateCamera(Direction::Right);
+            break;
 
-    default:
-        break;
+        default:
+            break;
+        }
     }
    
 }
