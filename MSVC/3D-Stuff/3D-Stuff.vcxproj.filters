@@ -38,7 +38,7 @@
     <ClInclude Include="include\Robot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Camera.h">
+    <ClInclude Include="include\CameraInterface.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 using glm::vec3;
+using glm::vec4;
 
 Teapot::Teapot()
     : _rotation_mat_user_input(1.f),
@@ -14,23 +15,22 @@ Teapot::Teapot()
     _far(1000)
 {
     // setting up default camera
-    _camera.eye    = vec3(0, 0, 5);
-    _camera.center = vec3(0, 0, 0);
-    _camera.up     = vec3(0, 1, 0);
+    _eye    = vec4(0, 0, 5, 1);
+    _center = vec4(0, 0, 0, 1);
+    _up     = vec4(0, 1, 0, 0);
 }
 
 void Teapot::render() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    if (_perspective) {
-        auto& eye    = _camera.eye;
-        auto& center = _camera.center;
-        auto& up     = _camera.up;
-        gluLookAt(eye[0], eye[1], eye[2], center[0], center[1], center[2], up[0], up[1], up[2]);
-    }
-
     glMultMatrixf(&_rotation_mat_user_input[0][0]);
+
+    if (_perspective) {
+        // view matrix
+        auto lookAt = glm::lookAt(vec3(_eye), vec3(_center), vec3(_up));
+        glMultMatrixf(&lookAt[0][0]);
+    }
 
     glColor3f(1.f, 1.f, 1.f);
     glutWireTeapot(.5);
@@ -70,9 +70,9 @@ void Teapot::SetProjectionPerspective() {
     auto ratio = 1.0 * _width / _height;
     gluPerspective(fovy, ratio, _near, _far);
 
-    _camera.eye    = vec3(0, 0, 2);
-    _camera.center = vec3(0, 0, 0);
-    _camera.up     = vec3(0, 1, 0);
+    _eye    = vec4(0, 0, 2, 1);
+    _center = vec4(0, 0, 0, 1);
+    _up     = vec4(0, 1, 0, 0);
 }
 
 void Teapot::SetProjectionParallel() {
@@ -93,6 +93,8 @@ sf::String Teapot::HelpInfo() const {
 WASD - Obj Rotation
 Arrows - Obj Translation
 P - Toggle Projection
+
+IJKL - Camera Translation
 )";
 
     return append_text;
@@ -108,7 +110,7 @@ void Teapot::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift
     glm::vec3 v;
 
     switch (key) {
-    // WASD for rotation
+    // WASD for object rotation
     case Key::W:
         // rotate object upwards
          v = glm::vec3(1, 0, 0);
@@ -130,7 +132,7 @@ void Teapot::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift
         _rotation_mat_user_input = glm::rotate(_rotation_mat_user_input, rotate_angle_delta, v);
         break;
 
-    // Arrows for translation
+    // Arrows for object translation
     case Key::Up:
         // translate object upwards
          v = translate_length_delta * glm::vec3(0, 1, 0);
@@ -150,6 +152,20 @@ void Teapot::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift
         // translate object right
         v = translate_length_delta * glm::vec3(1, 0, 0);
         _rotation_mat_user_input = glm::translate(_rotation_mat_user_input, v);
+        break;
+
+    // Arrows for camera translation
+    case Key::I:
+        translateCamera(Direction::Up);
+        break;
+    case Key::J:
+        translateCamera(Direction::Left);
+        break;
+    case Key::K:
+        translateCamera(Direction::Down);
+        break;
+    case Key::L:
+        translateCamera(Direction::Right);
         break;
 
         // projection toggle

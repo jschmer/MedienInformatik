@@ -11,9 +11,9 @@
 #include <SFML/OpenGL.hpp>
 #include <SFMLApp.h>
 
-#include <Camera.h>
+#include "CameraInterface.hpp"
 
-class Robot
+class Robot : public CameraInterface
 {
 public:
     Robot();
@@ -34,8 +34,6 @@ private:
     void DrawRightArm() const;
 
 private:
-    Camera _camera;
-
     std::vector<GLfloat> _base_vertices;
     std::vector<GLfloat> _upper_arm_vertices;
     std::vector<GLfloat> _lower_arm_vertices;

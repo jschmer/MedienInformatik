@@ -8,9 +8,9 @@
 
 #include <SFMLApp.h>
 
-#include <Camera.h>
+#include <CameraInterface.hpp>
 
-class Teapot {
+class Teapot : public CameraInterface {
 public:
     Teapot();
     void render();
@@ -27,8 +27,6 @@ private:
     void SetProjectionParallel();
 
 private:
-    Camera _camera;
-
     glm::mat4 _rotation_mat_user_input;
     uint _width, _height;
     bool _perspective;

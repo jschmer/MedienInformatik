@@ -79,7 +79,7 @@ void OpenGLApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool sh
         _teapot.OnKeyPressed(key, ctrl, alt, shift, system);
         break;
     case Mode::Robot:
-        //_robot.OnKeyPressed(key, ctrl, alt, shift, system);
+        _robot.OnKeyPressed(key, ctrl, alt, shift, system);
         break;
     default:
         assert(false);
