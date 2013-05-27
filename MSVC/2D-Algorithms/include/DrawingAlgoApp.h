@@ -117,6 +117,7 @@ private:
     void DrawPoints(const std::vector<Point2D>& points, const Color& color = Color(0, 255, 0));
 
     void SaveAsPPM(const char* filename = "Screen_capture.ppm");
+    void ToggleVsync();
 
     //
     // drawing algorithms
@@ -159,6 +160,7 @@ private:
     static const int height = 700;
 
     BouncingRect _bouncing_rect;
+    bool _vsync;
 
     ClippingRectangle _clipping_rect;
     std::vector<Point2D> _vertices;

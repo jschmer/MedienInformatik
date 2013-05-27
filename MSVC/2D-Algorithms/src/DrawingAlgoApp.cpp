@@ -121,7 +121,8 @@ DrawingAlgoApp::DrawingAlgoApp()
     _transform_type(TransformationType::None),
     _transform_origin(0, 0),
     _show_current_mode(true),
-    _antialiase(false)
+    _antialiase(false),
+    _vsync(true)
 {
     _current_mode_text = sf::Text("", sf::Font(), 15u);
 
@@ -178,6 +179,7 @@ bool DrawingAlgoApp::OnInit() {
 V = Show Current Mode
 C = Clear Colorbuffer
 X = Capture Screen
+Tab = Toggle Vsync
 
 Modes:
 1 = None
@@ -468,6 +470,11 @@ void DrawingAlgoApp::SaveAsPPM(const char* filename) {
              out << color.R << color.G << color.B;
         }
     }
+}
+
+void DrawingAlgoApp::ToggleVsync() {
+    _vsync = !_vsync;
+    _window.setVerticalSyncEnabled(_vsync);
 }
 
 //
@@ -1627,6 +1634,9 @@ void DrawingAlgoApp::OnKeyReleased(sf::Keyboard::Key key, bool ctrl, bool alt, b
         break;
     case Key::Z:
         _transform_type = TransformationType::SetOrigin;
+        break;
+    case Key::Tab:
+        ToggleVsync();
         break;
     }
 
