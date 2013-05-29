@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include "objLoader.hpp"
 #include "IRender.h"
 #include "CameraInterface.hpp"
 
@@ -24,5 +25,10 @@ public:
 
     // other events
     void OnResized(uint width, uint height);
+
+private:
+    Obj _obj;
+
+   std::string _help_info_append;
 };
 

@@ -55,8 +55,14 @@ inline void CameraInterface::translateCamera(Direction dir) {
     case Direction::Down:
         transf = glm::translate(transf, glm::vec3(0, -1*factor, 0));
         break;
+    case Direction::Forward:
+        transf = glm::translate(transf, glm::vec3(0, 0, -1*factor));
+        break;
+    case Direction::Backward:
+        transf = glm::translate(transf, glm::vec3(0, 0, 1*factor));
+        break;
     }
 
     _eye    = transf * _eye;
-    //_center = transf * _center;
+    _center = transf * _center;
 }
