@@ -4,17 +4,18 @@
  * See COPYING within this package for further information. 
  */
 #pragma once
-#include <glm/glm.hpp>
 
-#include <SFMLApp.h>
+#include "IRender.h"
+#include "CameraInterface.hpp"
 
-#include <IRender.h>
-#include <CameraInterface.hpp>
-
-class Teapot : public CameraInterface, public IRender {
+class ObjViewer :
+    public CameraInterface,
+    public IRender
+{
 public:
-    Teapot();
-    ~Teapot();
+    ObjViewer();
+    ~ObjViewer();
+
     void render();
 
     // keyboard events
@@ -23,14 +24,5 @@ public:
 
     // other events
     void OnResized(uint width, uint height);
-
-private:
-    void SetProjectionPerspective();
-    void SetProjectionParallel();
-
-private:
-    glm::mat4 _rotation_mat_user_input;
-    uint _width, _height;
-    bool _perspective;
-    double _near, _far;
 };
+

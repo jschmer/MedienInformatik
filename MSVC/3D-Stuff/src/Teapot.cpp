@@ -20,6 +20,10 @@ Teapot::Teapot()
     _up     = vec4(0, 1, 0, 0);
 }
 
+Teapot::~Teapot()
+{
+}
+
 void Teapot::render() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

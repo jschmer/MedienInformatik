@@ -24,7 +24,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120_CTP_Nov2012</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -32,9 +32,11 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="GLM.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="GLM.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -100,12 +102,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="include\Robot.cpp" />
+    <ClCompile Include="src\objLoader.cpp" />
+    <ClCompile Include="src\ObjViewer.cpp" />
     <ClCompile Include="src\OpenGLApp.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Teapot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\CameraInterface.hpp" />
+    <ClInclude Include="include\IRender.h" />
+    <ClInclude Include="include\objLoader.hpp" />
+    <ClInclude Include="include\ObjViewer.h" />
     <ClInclude Include="include\OpenGLApp.h" />
     <ClInclude Include="include\Robot.h" />
     <ClInclude Include="include\Teapot.h" />

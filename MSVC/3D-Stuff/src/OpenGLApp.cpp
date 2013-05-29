@@ -8,7 +8,10 @@
 #include <Freeglut/glut.h>
 
 OpenGLApp::OpenGLApp(int* argc, char** argv)
-    : _current_mode(Mode::Teapot)
+    : _teapot(),
+    _robot(),
+    _objviewer(),
+    _mode(&_teapot)
 {
     glutInit(argc, argv);
 }
@@ -19,7 +22,8 @@ bool OpenGLApp::OnInit() {
 
     const auto append_text = "\n"
         "1 = Teapot\n"
-        "2 = Robot\n";
+        "2 = Robot\n"
+        "3 = ObjViewer\n";
 
     auto help = _help_text.getString();
     help.insert(help.getSize(), append_text);
@@ -32,29 +36,12 @@ bool OpenGLApp::OnInit() {
 
 void OpenGLApp::OnRender() {
     // render mode
-    switch (_current_mode) {
-    case Mode::Teapot:
-        _teapot.render();
-        break;
-    case Mode::Robot:
-        _robot.render();
-        break;
-    default:
-        assert(false);
-    }
+    _mode->render();
 
     // render "HUD"
     sf::String append;
-    switch (_current_mode) {
-    case Mode::Teapot:
-        append = _teapot.HelpInfo();
-        break;
-    case Mode::Robot:
-        append = _robot.HelpInfo();
-        break;
-    default:
-        assert(false);
-    }
+    append = _mode->HelpInfo();
+
     Super::RenderHelpText(append);
     Super::RenderFPS();
     Super::RenderMousePos();
@@ -66,37 +53,22 @@ void OpenGLApp::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool sh
     // switch mode
     switch (key) {
     case Key::Num1:
-        _current_mode = Mode::Teapot;
+        _mode = &_teapot;
         break;
     case Key::Num2:
-        _current_mode = Mode::Robot;
+        _mode = &_robot;
+        break;
+    case Key::Num3:
+        _mode = &_objviewer;
         break;
     }
 
     // handle mode
-    switch (_current_mode) {
-    case Mode::Teapot:
-        _teapot.OnKeyPressed(key, ctrl, alt, shift, system);
-        break;
-    case Mode::Robot:
-        _robot.OnKeyPressed(key, ctrl, alt, shift, system);
-        break;
-    default:
-        assert(false);
-    }
+    _mode->OnKeyPressed(key, ctrl, alt, shift, system);
 }
 
 void OpenGLApp::OnResized(uint width, uint height) {
     Super::OnResized(width, height);
 
-    switch (_current_mode) {
-    case Mode::Teapot:
-        _teapot.OnResized(width, height);
-        break;
-    case Mode::Robot:
-        _robot.OnResized(width, height);
-        break;
-    default:
-        assert(false);
-    }
+    _mode->OnResized(width, height);
 }

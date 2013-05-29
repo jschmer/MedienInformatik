@@ -11,16 +11,13 @@
 
 #include <SFMLApp.h>
 
-#include <Teapot.h>
-#include <Robot.h>
+#include "IRender.h"
+#include "Teapot.h"
+#include "Robot.h"
+#include "ObjViewer.h"
 
 class OpenGLApp : public SFMLApp {
     typedef SFMLApp Super;
-
-    enum class Mode {
-        Teapot,
-        Robot
-    };
 
 public:
     OpenGLApp(int* argc, char** argv);
@@ -35,8 +32,11 @@ public:
     virtual void OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system) override;
     virtual void OnResized(uint width, uint height) override;
 
-private:
-    Mode _current_mode;
+private:    
+    // just a pointer to the current mode, ownership is still at the reference object itself
+    IRender* _mode;
+
     Teapot _teapot;
     Robot _robot;
+    ObjViewer _objviewer;
 };

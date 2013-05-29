@@ -11,9 +11,10 @@
 #include <SFML/OpenGL.hpp>
 #include <SFMLApp.h>
 
+#include "IRender.h"
 #include "CameraInterface.hpp"
 
-class Robot : public CameraInterface
+class Robot : public CameraInterface, public IRender
 {
 public:
     Robot();
