@@ -4,6 +4,7 @@
 #include <string>
 #include <algorithm>
 
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <SFML/OpenGL.hpp>
 
@@ -22,7 +23,7 @@ ObjViewer::ObjViewer()
     }
 
     // bunny
-    _eye    = vec4(0.f, 1.f, 3.f, 1.f);
+    _eye    = vec4(-.1f, 1.f, 3.f, 1.f);
     _center = vec4(0.f, 1.f, 0.f, 1.f);
 
     // Anno
@@ -61,15 +62,14 @@ void ObjViewer::enableLighting() {
 
 void ObjViewer::render()
 {
-
     // render loaded _obj
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-
     // view matrix
     auto lookAt = glm::lookAt(vec3(_eye), vec3(_center), vec3(_up));
     glMultMatrixf(&lookAt[0][0]);
+    glMultMatrixf(&_rotation_mat_user_input[0][0]);
 
     enableLighting();
 
@@ -98,8 +98,11 @@ sf::String ObjViewer::HelpInfo() const
 {
     const auto append_text = R"(
 Translate Camera:
-WASD - Up/Left/Down/Right
-Shift + W/D - Forward/Backward
+Arrows - Up/Left/Down/Right
+Shift + Up/Down - Forward/Backward
+
+Rotate Object:
+WASD
 )";
 
     return std::string(append_text) + _help_info_append;
@@ -132,6 +135,28 @@ void ObjViewer::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool sh
         break;
     case Key::Right:
         translateCamera(Direction::Right);
+        break;
+
+    // WASD for object rotation
+    case Key::W:
+        // rotate object upwards
+         v = glm::vec3(1, 0, 0);
+        _rotation_mat_user_input = glm::rotate(_rotation_mat_user_input, rotate_angle_delta, v);
+        break;
+    case Key::A:
+        // rotate object left
+        v = glm::vec3(0, 1, 0);
+        _rotation_mat_user_input = glm::rotate(_rotation_mat_user_input, -rotate_angle_delta, v);
+        break;
+    case Key::S:
+        // rotate object downwards
+        v = glm::vec3(1, 0, 0);
+        _rotation_mat_user_input = glm::rotate(_rotation_mat_user_input, -rotate_angle_delta, v);
+        break;
+    case Key::D:
+        // rotate object right
+        v = glm::vec3(0, 1, 0);
+        _rotation_mat_user_input = glm::rotate(_rotation_mat_user_input, rotate_angle_delta, v);
         break;
     default:
         break;

@@ -32,5 +32,6 @@ private:
     Obj _obj;
 
    std::string _help_info_append;
+   glm::mat4 _rotation_mat_user_input;
 };
 
