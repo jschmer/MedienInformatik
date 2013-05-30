@@ -8,7 +8,7 @@
 #include <Freeglut/glut.h>
 
 OpenGLApp::OpenGLApp(int* argc, char** argv)
-    : _teapot(),
+    : _teapot(_width, _height),
     _robot(),
     _objviewer(),
     _mode(&_teapot)

@@ -6,11 +6,11 @@
 using glm::vec3;
 using glm::vec4;
 
-Teapot::Teapot()
+Teapot::Teapot(uint width, uint height)
     : _rotation_mat_user_input(1.f),
     _perspective(true),
-    _width(600),
-    _height(400),
+    _width(width),
+    _height(height),
     _near(1),
     _far(1000)
 {

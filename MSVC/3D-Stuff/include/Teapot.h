@@ -13,7 +13,7 @@
 
 class Teapot : public CameraInterface, public IRender {
 public:
-    Teapot();
+    Teapot(uint width = 600, uint height = 400);
     ~Teapot();
     void render();
 

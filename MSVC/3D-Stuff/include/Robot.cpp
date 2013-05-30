@@ -374,13 +374,19 @@ void Robot::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift,
 
         // Arrows for camera translation
         case Key::Up:
-            translateCamera(Direction::Up);
+            if (ctrl)
+                translateCamera(Direction::Up);
+            else
+                translateCamera(Direction::Forward);
             break;
         case Key::Left:
             translateCamera(Direction::Left);
             break;
         case Key::Down:
-            translateCamera(Direction::Down);
+            if (ctrl)
+                translateCamera(Direction::Down);
+            else
+                translateCamera(Direction::Backward);
             break;
         case Key::Right:
             translateCamera(Direction::Right);

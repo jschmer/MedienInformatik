@@ -19,9 +19,14 @@ ObjViewer::ObjViewer()
         _help_info_append = std::string("\n") + std::string(e.what());
     }
 
-    _eye    = vec4(0.f, 1.f, 3.f, 1.f); // bunny
-    //_eye    = vec4(0.f, 250.f, 650.f, 1.f); // Anno
-    _center = vec4(0.f, 250.f, 0.f, 1.f);
+    // bunny
+    _eye    = vec4(0.f, 1.f, 3.f, 1.f);
+    _center = vec4(0.f, 1.f, 0.f, 1.f);
+
+    // Anno
+    //_eye    = vec4(0.f, 250.f, 650.f, 1.f);
+    //_center = vec4(0.f, 250.f, 0.f, 1.f);
+
     _up     = vec4(0.f, 1.f, 0.f, 0.f);
 }
 
