@@ -12,12 +12,34 @@ using namespace std;
 using glm::vec3;
 
 // Function to read input data values
-template <typename T>
-bool readvals(stringstream &s, const int numvals, T* values) {
+bool readvals(stringstream &s, const int numvals, GLfloat* values) {
     for (int i = 0; i < numvals; i++) {
-        s >> values[i];
+        string value;
+        s >> value;
 
-        if (s.fail()) {
+        try {
+            auto v = std::stof(value);
+            values[i] = v;
+        }
+        catch (std::exception) {
+            cout << "Failed reading value " << i << " will skip\n";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool readvals(stringstream &s, const int numvals, int* values) {
+    for (int i = 0; i < numvals; i++) {
+        string value;
+        s >> value;
+
+        try {
+            auto v = std::stoi(value);
+            values[i] = v;
+        }
+        catch (std::exception) {
             cout << "Failed reading value " << i << " will skip\n";
             return false;
         }
