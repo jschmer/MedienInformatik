@@ -20,7 +20,7 @@ An element of vector must be:
     Default-constructible, i.e. have a constructor compatible with T().
 */
 struct Face {
-    Face(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2)
+    Face(glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2)
         : v0(v0),
         v1(v1),
         v2(v2),
@@ -31,17 +31,18 @@ struct Face {
 
     }
 
-    const glm::vec3& v0;
-    const glm::vec3& v1;
-    const glm::vec3& v2;
+    glm::vec3& v0;
+    glm::vec3& v1;
+    glm::vec3& v2;
     const glm::vec3 normal;
 };
 
 struct Obj {
     std::vector<glm::vec3> vertices;
-    std::vector<const Face> faces;
+    std::vector<Face> faces;
     std::vector<const GLfloat> gl_vertices;
-    std::vector<const GLfloat> gl_normals;
+    std::vector<const GLfloat> gl_normals; // each vertex has the normal of its triangle
+    std::vector<const GLfloat> gl_normals_average; // each vertex has the averaged normal of the triangles it participates in
 };
 
 void loadObj(std::string, Obj& obj);

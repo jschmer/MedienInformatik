@@ -30,13 +30,9 @@ Teapot::~Teapot()
 void Teapot::enableLighting() {
     float factor = 1.f;
 
-    GLfloat ambient[]  = { 0.0, 0.2, 0.3, 1.0 };
-    GLfloat diffuse[]  = { 0.8, 1.0, 0.9, 1.0 };
-    GLfloat specular[] = { 0.6, 0.6, 0.6, 1.0 };
-    std::transform(begin(ambient), end(ambient), begin(ambient), [=](float el) { return factor*el; });
-    std::transform(begin(diffuse), end(diffuse), begin(diffuse), [=](float el) { return factor*el; });
-    std::transform(begin(specular), end(specular), begin(specular), [=](float el) { return factor*el; });
-
+    GLfloat ambient[]  = { 0.0*factor, 0.2*factor, 0.3*factor, 1.0 };
+    GLfloat diffuse[]  = { 0.8*factor, 1.0*factor, 0.9*factor, 1.0 };
+    GLfloat specular[] = { 0.6*factor, 0.6*factor, 0.6*factor, 1.0 };
 
     GLfloat position[] = { 2.0, 1.0, 2.0, 1.0 };
     GLfloat position1[] = { -5.0, 1.0, 0.0, 1.0 };

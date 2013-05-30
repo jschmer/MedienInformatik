@@ -15,8 +15,8 @@ using glm::vec4;
 ObjViewer::ObjViewer()
 {
     try {
-        loadObj("bunny.obj", _obj);
-        //loadObj("Anno_complete1.obj", _obj);
+        //loadObj("bunny.obj", _obj);
+        loadObj("Anno_complete1.obj", _obj);
         //loadObj("Dragon Fusion.obj", _obj);
     } catch (std::exception &e) {
         _help_info_append = std::string("\n") + std::string(e.what());
@@ -27,8 +27,8 @@ ObjViewer::ObjViewer()
     _center = vec4(0.f, 1.f, 0.f, 1.f);
 
     // Anno
-    //_eye    = vec4(0.f, 250.f, 650.f, 1.f);
-    //_center = vec4(0.f, 250.f, 0.f, 1.f);
+    _eye    = vec4(0.f, 250.f, 650.f, 1.f);
+    _center = vec4(0.f, 250.f, 0.f, 1.f);
 
     _up     = vec4(0.f, 1.f, 0.f, 0.f);
 }
@@ -40,12 +40,9 @@ ObjViewer::~ObjViewer()
 void ObjViewer::enableLighting() {
     float factor = 6.f;
 
-    GLfloat ambient[]  = { 0.3, 0.1, 0.1, 1.0 };
-    GLfloat diffuse[]  = { 0.8, 0.4, 0.4, 1.0 };
-    GLfloat specular[] = { 0.6, 0.8, 0.6, 1.0 };
-    std::transform(begin(ambient), end(ambient), begin(ambient), [=](float el) { return factor*el; });
-    std::transform(begin(diffuse), end(diffuse), begin(diffuse), [=](float el) { return factor*el; });
-    std::transform(begin(specular), end(specular), begin(specular), [=](float el) { return factor*el; });
+    GLfloat ambient[]  = { 0.3*factor, 0.1*factor, 0.1*factor, 1.0 };
+    GLfloat diffuse[]  = { 0.8*factor, 0.4*factor, 0.4*factor, 1.0 };
+    GLfloat specular[] = { 0.6*factor, 0.8*factor, 0.6*factor, 1.0 };
 
     GLfloat position[] = { 0.0, 1.0, 3.0, 1.0 };
 
@@ -81,10 +78,13 @@ void ObjViewer::render()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    glScalef(10.f, 10.f, 10.f); // bunny
+    //glScalef(10.f, 10.f, 10.f); // bunny
+
+    auto& normal_array = _obj.gl_normals;
+    normal_array = _obj.gl_normals_average; // use averaged normals
 
     glVertexPointer(3, GL_FLOAT, 0, &_obj.gl_vertices[0]);
-    glNormalPointer(GL_FLOAT, 0, &_obj.gl_normals[0]);
+    glNormalPointer(GL_FLOAT, 0, &normal_array[0]);
     glDrawArrays(GL_TRIANGLES, 0, _obj.faces.size()*3);
 
     glDisable(GL_CULL_FACE);
