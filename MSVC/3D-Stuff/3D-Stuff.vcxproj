@@ -63,6 +63,7 @@
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\extlib\Freeglut\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(Configuration)\freeglut_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libcmt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>copy $(ProjectDir)..\..\extlib\Fonts\geo_1.ttf $(OutDir)</Command>
@@ -89,6 +90,7 @@
       <EntryPointSymbol>mainCRTStartup</EntryPointSymbol>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\extlib\Freeglut\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(Configuration)\freeglut_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libcmt</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>copy $(ProjectDir)..\..\extlib\Fonts\geo_1.ttf $(OutDir)</Command>

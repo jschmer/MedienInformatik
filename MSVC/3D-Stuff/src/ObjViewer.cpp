@@ -43,9 +43,9 @@ ObjViewer::~ObjViewer()
 void ObjViewer::enableLighting() {
     float factor = 6.f;
 
-    GLfloat ambient[]  = { 0.3*factor, 0.1*factor, 0.1*factor, 1.0 };
-    GLfloat diffuse[]  = { 0.8*factor, 0.4*factor, 0.4*factor, 1.0 };
-    GLfloat specular[] = { 0.6*factor, 0.8*factor, 0.6*factor, 1.0 };
+    GLfloat ambient[]  = { 0.3f*factor, 0.1f*factor, 0.1f*factor, 1.0 };
+    GLfloat diffuse[]  = { 0.8f*factor, 0.4f*factor, 0.4f*factor, 1.0 };
+    GLfloat specular[] = { 0.6f*factor, 0.8f*factor, 0.6f*factor, 1.0 };
 
     GLfloat position[] = { 0.0, 1.0, 3.0, 1.0 };
 

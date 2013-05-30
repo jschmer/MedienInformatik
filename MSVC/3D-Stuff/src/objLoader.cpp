@@ -94,7 +94,9 @@ void loadObj(string obj_file, Obj &obj) {
         auto& faces    = obj.faces;
         auto& vertices = obj.vertices;
 
-        auto count = std::count(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), '\n');
+        auto count = static_cast<unsigned int>(std::count(std::istreambuf_iterator<char>(file),
+                                                          std::istreambuf_iterator<char>(),
+                                                          '\n'));
         
         // jump back to beginning of file
         file.clear();
