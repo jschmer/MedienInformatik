@@ -16,8 +16,8 @@ ObjViewer::ObjViewer()
     : _normalmode(NormalMode::Triangle)
 {
     try {
-        loadObj("bunny.obj", _obj);
-        //loadObj("Anno_complete1.obj", _obj);
+        //loadObj("bunny.obj", _obj);
+        loadObj("Anno_complete1.obj", _obj);
         //loadObj("Dragon Fusion.obj", _obj);
     } catch (std::exception &e) {
         _help_info_append = std::string("\n") + std::string(e.what());
@@ -26,10 +26,12 @@ ObjViewer::ObjViewer()
     // bunny
     _eye    = vec4(-.1f, 2.f, 6.f, 1.f);
     _center = vec4(0.f, 2.f, 0.f, 1.f);
+    _translation_factor = 1.f;
 
-    //// Anno
-    //_eye    = vec4(0.f, 250.f, 650.f, 1.f);
-    //_center = vec4(0.f, 250.f, 0.f, 1.f);
+    // Anno
+    _eye    = vec4(0.f, 250.f, 650.f, 1.f);
+    _center = vec4(0.f, 250.f, 0.f, 1.f);
+    _translation_factor = 25.f;
 
     _up     = vec4(0.f, 1.f, 0.f, 0.f);
 }
@@ -80,7 +82,7 @@ void ObjViewer::render()
     glCullFace(GL_BACK);
 
     auto scale = 20.f;
-    glScalef(scale, scale, scale); // bunny
+    //glScalef(scale, scale, scale); // bunny
 
     auto normal_array = &_obj.gl_normals;
     if (_normalmode == NormalMode::Averaged)
@@ -135,21 +137,21 @@ void ObjViewer::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool sh
     // Arrows for camera translation
     case Key::Up:
         if (shift)
-            translateCamera(Direction::Forward);
+            translateCamera(Direction::Forward, _translation_factor);
         else
-            translateCamera(Direction::Up);
+            translateCamera(Direction::Up, _translation_factor);
         break;
     case Key::Left:
-        translateCamera(Direction::Left);
+        translateCamera(Direction::Left, _translation_factor);
         break;
     case Key::Down:
         if (shift)
-            translateCamera(Direction::Backward);
+            translateCamera(Direction::Backward, _translation_factor);
         else
-            translateCamera(Direction::Down);
+            translateCamera(Direction::Down, _translation_factor);
         break;
     case Key::Right:
-        translateCamera(Direction::Right);
+        translateCamera(Direction::Right, _translation_factor);
         break;
 
     // WASD for object rotation

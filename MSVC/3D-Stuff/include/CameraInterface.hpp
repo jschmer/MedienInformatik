@@ -19,7 +19,7 @@ protected:
     };
 
     void rotateCamera(Direction dir, float degrees);
-    void translateCamera(Direction dir);
+    void translateCamera(Direction dir, float factor = .1f);
 
 protected:
     glm::vec4 _eye, _center, _up;
@@ -37,9 +37,7 @@ inline CameraInterface::~CameraInterface()
 inline void CameraInterface::rotateCamera(Direction dir, float degrees) {
 }
 
-inline void CameraInterface::translateCamera(Direction dir) {
-    const float factor = .1f;
-
+inline void CameraInterface::translateCamera(Direction dir, float factor) {
     auto transf = glm::mat4(1.0f);
 
     switch (dir) {

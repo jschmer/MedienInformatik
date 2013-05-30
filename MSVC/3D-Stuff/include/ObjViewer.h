@@ -35,8 +35,9 @@ public:
 private:
     Obj _obj;
     NormalMode _normalmode;
+    float _translation_factor;
 
-   std::string _help_info_append;
-   glm::mat4 _rotation_mat_user_input;
+    std::string _help_info_append;
+    glm::mat4 _rotation_mat_user_input;
 };
 
