@@ -118,12 +118,17 @@ void loadObj(string obj_file, Obj &obj) {
 
         // generate vertex array for fast opengl rendering
         auto& gl_vertices = obj.gl_vertices;
+        auto& gl_normals  = obj.gl_normals;
         gl_vertices.clear();
         gl_vertices.reserve(vertices.size());
         for (auto const face : faces) {
             addToVec(gl_vertices, face.v0);
             addToVec(gl_vertices, face.v1);
             addToVec(gl_vertices, face.v2);
+
+            addToVec(gl_normals, face.normal);
+            addToVec(gl_normals, face.normal);
+            addToVec(gl_normals, face.normal);
         }
 
     }

@@ -41,6 +41,7 @@ struct Obj {
     std::vector<glm::vec3> vertices;
     std::vector<const Face> faces;
     std::vector<const GLfloat> gl_vertices;
+    std::vector<const GLfloat> gl_normals;
 };
 
 void loadObj(std::string, Obj& obj);

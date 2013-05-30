@@ -113,6 +113,8 @@ o Shift & +/-
 }
 
 void Robot::render() {
+    glDisable( GL_LIGHTING );
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 

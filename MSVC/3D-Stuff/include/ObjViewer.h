@@ -19,6 +19,8 @@ public:
 
     void render();
 
+    void enableLighting();
+
     // keyboard events
     sf::String HelpInfo() const;
     void OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool shift, bool system);

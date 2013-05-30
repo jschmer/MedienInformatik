@@ -2,10 +2,12 @@
 
 #include <exception>
 #include <string>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 #include <SFML/OpenGL.hpp>
 
+using namespace std;
 using glm::vec3;
 using glm::vec4;
 
@@ -34,17 +36,45 @@ ObjViewer::~ObjViewer()
 {
 }
 
+void ObjViewer::enableLighting() {
+    float factor = 6.f;
+
+    GLfloat ambient[]  = { 0.3, 0.1, 0.1, 1.0 };
+    GLfloat diffuse[]  = { 0.8, 0.4, 0.4, 1.0 };
+    GLfloat specular[] = { 0.6, 0.8, 0.6, 1.0 };
+    std::transform(begin(ambient), end(ambient), begin(ambient), [=](float el) { return factor*el; });
+    std::transform(begin(diffuse), end(diffuse), begin(diffuse), [=](float el) { return factor*el; });
+    std::transform(begin(specular), end(specular), begin(specular), [=](float el) { return factor*el; });
+
+    GLfloat position[] = { 0.0, 1.0, 3.0, 1.0 };
+
+    glShadeModel( GL_SMOOTH );
+
+    glLightfv( GL_LIGHT0, GL_AMBIENT, ambient);
+    glLightfv( GL_LIGHT0, GL_DIFFUSE, diffuse );
+    glLightfv( GL_LIGHT0, GL_SPECULAR, specular);
+    glLightfv( GL_LIGHT0, GL_POSITION, position);
+
+    glEnable( GL_LIGHTING );
+    glEnable( GL_LIGHT0 );
+}
+
 void ObjViewer::render()
 {
+
     // render loaded _obj
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
 
     // view matrix
     auto lookAt = glm::lookAt(vec3(_eye), vec3(_center), vec3(_up));
     glMultMatrixf(&lookAt[0][0]);
 
+    enableLighting();
+
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
 
     // enable z-Buffer and Backface Culling
     glEnable(GL_DEPTH_TEST);
@@ -53,8 +83,8 @@ void ObjViewer::render()
 
     glScalef(10.f, 10.f, 10.f); // bunny
 
-    glColor3f(1.0f, 0.0f, 0.0f);
     glVertexPointer(3, GL_FLOAT, 0, &_obj.gl_vertices[0]);
+    glNormalPointer(GL_FLOAT, 0, &_obj.gl_normals[0]);
     glDrawArrays(GL_TRIANGLES, 0, _obj.faces.size()*3);
 
     glDisable(GL_CULL_FACE);

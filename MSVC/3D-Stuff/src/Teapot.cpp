@@ -1,8 +1,11 @@
 #include <Teapot.h>
 
+#include <algorithm>
+
 #include <Freeglut/glut.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+using namespace std;
 using glm::vec3;
 using glm::vec4;
 
@@ -24,11 +27,46 @@ Teapot::~Teapot()
 {
 }
 
+void Teapot::enableLighting() {
+    float factor = 1.f;
+
+    GLfloat ambient[]  = { 0.0, 0.2, 0.3, 1.0 };
+    GLfloat diffuse[]  = { 0.8, 1.0, 0.9, 1.0 };
+    GLfloat specular[] = { 0.6, 0.6, 0.6, 1.0 };
+    std::transform(begin(ambient), end(ambient), begin(ambient), [=](float el) { return factor*el; });
+    std::transform(begin(diffuse), end(diffuse), begin(diffuse), [=](float el) { return factor*el; });
+    std::transform(begin(specular), end(specular), begin(specular), [=](float el) { return factor*el; });
+
+
+    GLfloat position[] = { 2.0, 1.0, 2.0, 1.0 };
+    GLfloat position1[] = { -5.0, 1.0, 0.0, 1.0 };
+
+    //glShadeModel( GL_SMOOTH );
+    glShadeModel( GL_FLAT );
+
+    glLightfv( GL_LIGHT0, GL_AMBIENT, ambient);
+    glLightfv( GL_LIGHT0, GL_DIFFUSE, diffuse );
+    glLightfv( GL_LIGHT0, GL_SPECULAR, specular);
+    glLightfv( GL_LIGHT0, GL_POSITION, position);
+
+    glLightfv( GL_LIGHT1, GL_AMBIENT, ambient);
+    glLightfv( GL_LIGHT1, GL_DIFFUSE, diffuse );
+    glLightfv( GL_LIGHT1, GL_SPECULAR, specular);
+    glLightfv( GL_LIGHT1, GL_POSITION, position1);
+
+    glEnable( GL_LIGHTING );
+    glEnable( GL_LIGHT0 );
+    glEnable( GL_LIGHT1 );
+}
+
 void Teapot::render() {
+    // enable z-Buffer and Backface Culling
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-    glMultMatrixf(&_rotation_mat_user_input[0][0]);
 
     if (_perspective) {
         // view matrix
@@ -36,8 +74,16 @@ void Teapot::render() {
         glMultMatrixf(&lookAt[0][0]);
     }
 
-    glColor3f(1.f, 1.f, 1.f);
-    glutWireTeapot(.5);
+    glMultMatrixf(&_rotation_mat_user_input[0][0]);
+
+    enableLighting();
+
+    //glColor3f(1.f, 1.f, 1.f);
+    glutSolidTeapot(.5);
+    //glutWireTeapot(.5);
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
 }
 
 void Teapot::OnResized(uint width, uint height) {
