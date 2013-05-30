@@ -13,22 +13,23 @@ using glm::vec3;
 using glm::vec4;
 
 ObjViewer::ObjViewer()
+    : _normalmode(NormalMode::Triangle)
 {
     try {
-        //loadObj("bunny.obj", _obj);
-        loadObj("Anno_complete1.obj", _obj);
+        loadObj("bunny.obj", _obj);
+        //loadObj("Anno_complete1.obj", _obj);
         //loadObj("Dragon Fusion.obj", _obj);
     } catch (std::exception &e) {
         _help_info_append = std::string("\n") + std::string(e.what());
     }
 
     // bunny
-    _eye    = vec4(-.1f, 1.f, 3.f, 1.f);
-    _center = vec4(0.f, 1.f, 0.f, 1.f);
+    _eye    = vec4(-.1f, 2.f, 6.f, 1.f);
+    _center = vec4(0.f, 2.f, 0.f, 1.f);
 
-    // Anno
-    _eye    = vec4(0.f, 250.f, 650.f, 1.f);
-    _center = vec4(0.f, 250.f, 0.f, 1.f);
+    //// Anno
+    //_eye    = vec4(0.f, 250.f, 650.f, 1.f);
+    //_center = vec4(0.f, 250.f, 0.f, 1.f);
 
     _up     = vec4(0.f, 1.f, 0.f, 0.f);
 }
@@ -78,13 +79,15 @@ void ObjViewer::render()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    //glScalef(10.f, 10.f, 10.f); // bunny
+    auto scale = 20.f;
+    glScalef(scale, scale, scale); // bunny
 
-    auto& normal_array = _obj.gl_normals;
-    normal_array = _obj.gl_normals_average; // use averaged normals
+    auto normal_array = &_obj.gl_normals;
+    if (_normalmode == NormalMode::Averaged)
+        normal_array = &_obj.gl_normals_average; // use averaged normals
 
     glVertexPointer(3, GL_FLOAT, 0, &_obj.gl_vertices[0]);
-    glNormalPointer(GL_FLOAT, 0, &normal_array[0]);
+    glNormalPointer(GL_FLOAT, 0, &(*normal_array)[0]);
     glDrawArrays(GL_TRIANGLES, 0, _obj.faces.size()*3);
 
     glDisable(GL_CULL_FACE);
@@ -103,6 +106,10 @@ Shift + Up/Down - Forward/Backward
 
 Rotate Object:
 WASD
+
+Normal Rendering:
+F1 - Triangle
+F2 - Averaged
 )";
 
     return std::string(append_text) + _help_info_append;
@@ -117,7 +124,15 @@ void ObjViewer::OnKeyPressed(sf::Keyboard::Key key, bool ctrl, bool alt, bool sh
 
     glm::vec3 v;
     switch (key) {
-        // Arrows for camera translation
+    // normal mode switch
+    case Key::F1:
+        _normalmode = NormalMode::Triangle;
+        break;
+    case Key::F2:
+        _normalmode = NormalMode::Averaged;
+        break;
+
+    // Arrows for camera translation
     case Key::Up:
         if (shift)
             translateCamera(Direction::Forward);

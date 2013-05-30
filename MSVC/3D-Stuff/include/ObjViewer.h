@@ -17,8 +17,12 @@ public:
     ObjViewer();
     ~ObjViewer();
 
-    void render();
+    enum class NormalMode {
+        Triangle,
+        Averaged
+    };
 
+    void render();
     void enableLighting();
 
     // keyboard events
@@ -30,6 +34,7 @@ public:
 
 private:
     Obj _obj;
+    NormalMode _normalmode;
 
    std::string _help_info_append;
    glm::mat4 _rotation_mat_user_input;
