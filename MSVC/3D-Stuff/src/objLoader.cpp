@@ -12,7 +12,7 @@ using namespace std;
 using glm::vec3;
 
 //string split helper
-vector<string> split(string s, char delim) {
+vector<string> split(const string &s, char delim) {
     vector<string> ret;
     ret.reserve(10u);
 
@@ -29,13 +29,13 @@ vector<string> split(string s, char delim) {
 }
 
 // Function to read input data values
-bool readvals(string &s, const unsigned int numvals, GLfloat* values) {
+bool readvals(const string &s, const unsigned int numvals, GLfloat* values) {
 
     auto parts = split(s, ' ');
 
     if (parts.size() > numvals) {
         cout << "More values requested than available! will skip...\n";
-       return false;
+        return false;
     }
 
     for (auto i = 0u; i < numvals; i++) {
@@ -105,92 +105,104 @@ void loadObj(string obj_file, Obj &obj) {
     ifstream file(obj_file);
 
     if (file.is_open()) {
-        auto& faces    = obj.faces;
-        auto& vertices = obj.vertices;
+        file.close(); // file will be read without stream methods for speed!
 
-        // count lines in file
-        auto count = static_cast<unsigned int>(std::count(std::istreambuf_iterator<char>(file),
-                                                          std::istreambuf_iterator<char>(),
-                                                          '\n'));
-        
-        // jump back to beginning of file
-        file.clear();
-        file.seekg(0, ios::beg);
+        vector<string> vertex_cmds;
+        vector<string> face_cmds;
 
-        // reserve enough space to make sure that the container won't ever resize!
-        // a resize would invalidate all references and pointer to its objects and i
-        // have these!
-        faces.clear();
-        faces.reserve(count);
-        vertices.clear();
-        vertices.reserve(count);
-
-        // for averaging vertex normals
-        map<vec3*, set<Face*>> vtx_triangle_map;
+        FILE* fileptr;
+        fopen_s(&fileptr, obj_file.c_str(), "r");
 
         // read file line by line as long as it's good
-        while (file.good()) {
-            // read line
-            string line;
-            getline(file, line);
+        const auto linelength = 4096u;
+        char cline[linelength];
+        while (fgets(cline, linelength, fileptr) != NULL) {
+            // convert line to string
+            string line(cline);
+            line.erase(line.end() - 1); // remove newline
 
+            // skip empty lines
             if (line.empty())
                 continue;
 
-            // extract mode (v, f, vn, ...)
-            auto mode = split(line, ' ')[0];
+            // extract command mode (v, f, #, vn, ...), search foe whitespace
+            auto idx = 0u;
+            while (line[idx] != ' ') ++idx;
+
+            auto mode = line.substr(0, idx);
 
             // erase mode from input line
-            line = line.substr(mode.length()+1);
+            line = line.substr(idx+1);
 
-            // interpret mode
+            // put line in corresponding container
             if (mode == "#")
                 continue;
-
-            else if (mode == "v") {
-                // read vertex data
-                vector<float> coords(3, 0.0f);
-                if (readvals(line, 3, &coords[0])) {
-                    vertices.push_back(vec3(coords[0], coords[1], coords[2]));
-                }
-            }
-
-            else if (mode == "f") {
-                // read triangle face, vertices are indexed beginning from 1
-
-                // strip out any normals or texture specification
-                if (line.find("/") != string::npos) {
-                    auto vertex_indices = split(line, ' ');
-                    auto stripped_indices = accumulate(begin(vertex_indices),
-                                                       end(vertex_indices),
-                                                       string(),
-                                                       [](string &left, string right) -> string {
-                                                           auto spl = split(right, '/');
-                                                           return left + " " + spl[0];
-                                                    });
-                    line = stripped_indices.substr(1); // remove leading whitespace
-                }
-
-                vector<int> idx(3, 0);
-                if (readvals(line, 3, &idx[0])) {
-                    std::transform(begin(idx), end(idx), begin(idx), [](int i) -> int { return i-1; });
-
-                    auto& v1 = vertices[idx[0]];
-                    auto& v2 = vertices[idx[1]];
-                    auto& v3 = vertices[idx[2]];
-
-                    auto face = Face(v1, v2, v3);
-                    faces.emplace_back(face);
-
-                    // save the triangle for each vertex for averaging normals
-                    vtx_triangle_map[&v1].insert(&faces.back());
-                    vtx_triangle_map[&v2].insert(&faces.back());
-                    vtx_triangle_map[&v3].insert(&faces.back());
-                }
-            }
+            else if (mode == "v")
+                vertex_cmds.push_back(line);
+            else if (mode == "f")
+                face_cmds.push_back(line);
         }
 
         file.close();
+
+        auto& faces    = obj.faces;
+        auto& vertices = obj.vertices;
+
+        // reserve enough space to make sure that the container won't ever resize!
+        // a resize would invalidate all references and pointer to its objects!
+        faces.clear();
+        faces.reserve(face_cmds.size());
+        vertices.clear();
+        vertices.reserve(vertex_cmds.size());
+
+        // convert vertex lines into vertices
+        for (const auto& vertex_cmd : vertex_cmds) {
+            // read vertex data
+            vector<float> coords(3, 0.0f);
+            if (readvals(vertex_cmd, 3, &coords[0])) {
+                vertices.push_back(vec3(coords[0], coords[1], coords[2]));
+            }
+        }
+
+        // for averaging vertex normals, this stores a list of Faces the vertex contributes to
+        map<vec3*, set<Face*>> vtx_triangle_map;
+        for (auto& vtx : vertices)
+            vtx_triangle_map.insert(make_pair(&vtx, set<Face*>()));
+
+        // read triangle face --- vertices are indexed beginning from 1
+        for (auto& face_cmd : face_cmds) {
+            // strip out any normals or texture specification
+            if (face_cmd.find("/") != string::npos) {
+                auto vertex_indices = split(face_cmd, ' ');
+                auto stripped_indices = accumulate(begin(vertex_indices),
+                    end(vertex_indices),
+                    string(),
+                    [](string &left, string right) -> string {
+                        auto spl = split(right, '/');
+                        return left + " " + spl[0];
+                });
+                face_cmd = stripped_indices.substr(1); // remove leading whitespace
+            }
+
+            // convert indices
+            vector<int> idx(3, 0);
+            if (readvals(face_cmd, 3, &idx[0])) {
+                // vertices are indexed beginning at 1 in a obj file, so subtract 1 to map to zero-indexed array
+                std::transform(begin(idx), end(idx), begin(idx), [](int i) -> int { return i-1; });
+
+                auto& v1 = vertices[idx[0]];
+                auto& v2 = vertices[idx[1]];
+                auto& v3 = vertices[idx[2]];
+
+                auto face = Face(v1, v2, v3);
+                faces.emplace_back(face);
+
+                // save the triangle for each vertex --- used for averaged normals
+                vtx_triangle_map[&v1].insert(&faces.back());
+                vtx_triangle_map[&v2].insert(&faces.back());
+                vtx_triangle_map[&v3].insert(&faces.back());
+            }
+        }
 
         // generate vertex and normal array for fast opengl rendering
         auto& gl_vertices = obj.gl_vertices;
