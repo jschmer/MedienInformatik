@@ -4,3 +4,4 @@
 
 /MSVC/*/lib
 bin
+/MSVC/raytrace/build
