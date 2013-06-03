@@ -16,9 +16,9 @@ ObjViewer::ObjViewer()
     : _normalmode(NormalMode::Triangle)
 {
     try {
-        //loadObj("bunny.obj", _obj);
-        loadObj("Anno_complete1.obj", _obj);
-        //loadObj("Dragon Fusion.obj", _obj);
+        loadObj("../bunny.obj", _obj);
+        //loadObj("../Anno_complete1.obj", _obj);
+        //loadObj("../Dragon Fusion.obj", _obj);
     } catch (std::exception &e) {
         _help_info_append = std::string("\n") + std::string(e.what());
     }
@@ -29,9 +29,9 @@ ObjViewer::ObjViewer()
     _translation_factor = 1.f;
 
     // Anno
-    _eye    = vec4(0.f, 250.f, 650.f, 1.f);
-    _center = vec4(0.f, 250.f, 0.f, 1.f);
-    _translation_factor = 25.f;
+    //_eye    = vec4(0.f, 250.f, 650.f, 1.f);
+    //_center = vec4(0.f, 250.f, 0.f, 1.f);
+    //_translation_factor = 25.f;
 
     _up     = vec4(0.f, 1.f, 0.f, 0.f);
 }
@@ -82,7 +82,7 @@ void ObjViewer::render()
     glCullFace(GL_BACK);
 
     auto scale = 20.f;
-    //glScalef(scale, scale, scale); // bunny
+    glScalef(scale, scale, scale); // bunny
 
     auto normal_array = &_obj.gl_normals;
     if (_normalmode == NormalMode::Averaged)
