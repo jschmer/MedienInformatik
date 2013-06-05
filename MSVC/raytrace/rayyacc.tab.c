@@ -195,6 +195,7 @@ extern void define_lookat(double x, double y, double z);
 extern void define_up(double x, double y, double z);
 extern void define_fovy(double dfovy);
 extern void define_aspect(double daspect);
+extern void define_background_color(double r, double g, double b);
 
 
 
@@ -508,14 +509,14 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    85,    85,    90,    90,   112,   113,   117,   118,   122,
-     123,   127,   128,   129,   130,   131,   135,   143,   149,   157,
-     165,   173,   181,   195,   199,   203,   207,   195,   214,   218,
-     219,   223,   224,   228,   238,   237,   245,   249,   250,   254,
-     259,   263,   264,   269,   268,   275,   276,   280,   285,   289,
-     290,   294,   302,   311,   320,   327,   334,   338,   339,   343,
-     352,   356,   357,   360,   367,   375,   385,   387,   410,   412,
-     416
+       0,    86,    86,    91,    91,   113,   114,   118,   119,   123,
+     124,   128,   129,   130,   131,   132,   136,   145,   154,   163,
+     172,   181,   189,   204,   208,   212,   216,   204,   223,   227,
+     228,   232,   233,   237,   247,   246,   254,   258,   259,   263,
+     268,   272,   273,   278,   277,   284,   285,   289,   294,   298,
+     299,   303,   311,   320,   329,   336,   343,   347,   348,   352,
+     361,   365,   366,   369,   376,   384,   394,   396,   419,   421,
+     425
 };
 #endif
 
@@ -1536,12 +1537,16 @@ yyreduce:
     {
 		printf("resolution %d %d\n", (yyvsp[(2) - (3)].intval), (yyvsp[(3) - (3)].intval) );
 		define_resolution((yyvsp[(2) - (3)].intval), (yyvsp[(3) - (3)].intval));
+		resolution_seen = 1;
 	  ;}
     break;
 
   case 17:
 
-    { printf("background %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval)); ;}
+    {
+	    printf("background %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
+		define_background_color((yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
+	  ;}
     break;
 
   case 18:
@@ -1549,6 +1554,7 @@ yyreduce:
     {
 		printf("eyepoint %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval) );
 		define_eye((yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
+		eyepoint_seen = 1;
 	  ;}
     break;
 
@@ -1557,6 +1563,7 @@ yyreduce:
     {
 		printf("lookat %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval) );
 		define_lookat((yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
+		lookat_seen = 1;
 	  ;}
     break;
 
@@ -1565,6 +1572,7 @@ yyreduce:
     {
 		printf("up %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
 		define_up((yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
+		up_seen = 1;
 	  ;}
     break;
 
@@ -1581,6 +1589,7 @@ yyreduce:
     {
 		printf("aspect %f\n", (yyvsp[(2) - (2)].floatval) );
 		define_aspect((yyvsp[(2) - (2)].floatval));
+		aspect_seen = 1;
 	  ;}
     break;
 

@@ -62,6 +62,7 @@ extern void define_lookat(double x, double y, double z);
 extern void define_up(double x, double y, double z);
 extern void define_fovy(double dfovy);
 extern void define_aspect(double daspect);
+extern void define_background_color(double r, double g, double b);
 %}
 
 
@@ -136,12 +137,16 @@ resolution
       {
 		printf("resolution %d %d\n", $2, $3 );
 		define_resolution($2, $3);
+		resolution_seen = 1;
 	  }
     ;
 
 background
     : BACKGROUND colorVal colorVal colorVal
-      { printf("background %f %f %f\n", $2, $3, $4); }
+      {
+	    printf("background %f %f %f\n", $2, $3, $4);
+		define_background_color($2, $3, $4);
+	  }
     ;
 
 
@@ -150,6 +155,7 @@ eyepoint
       {
 		printf("eyepoint %f %f %f\n", $2, $3, $4 );
 		define_eye($2, $3, $4);
+		eyepoint_seen = 1;
 	  }
     ;
 
@@ -158,6 +164,7 @@ lookat
       {
 		printf("lookat %f %f %f\n", $2, $3, $4 );
 		define_lookat($2, $3, $4);
+		lookat_seen = 1;
 	  }
     ;
 
@@ -166,6 +173,7 @@ up
       {
 		printf("up %f %f %f\n", $2, $3, $4);
 		define_up($2, $3, $4);
+		up_seen = 1;
 	  }
     ;
 
@@ -182,6 +190,7 @@ aspect
       {
 		printf("aspect %f\n", $2 );
 		define_aspect($2);
+		aspect_seen = 1;
 	  }
     ;
 

@@ -27,6 +27,8 @@ Vector up (0, 1, 0);
 
 auto fovy   = 45.0;
 auto aspect = g_width/static_cast<double>(g_height);
+
+Color background(0, 0, 0);
 // -------------------------------
 
 extern "C" {
@@ -94,6 +96,9 @@ extern "C" {
 	void define_aspect(double daspect) {
 		aspect = daspect;
 	}
+	void define_background_color(double r, double g, double b) {
+		background = Color(r, g, b);
+	}
 }
 
 int main(int argc, _TCHAR* argv[])
@@ -127,8 +132,8 @@ int main(int argc, _TCHAR* argv[])
 	// calc ray direction
 	auto dir = lookat.vsub(eye).normalize(); // (lookat - eye).normalize()
 
-	// params: direction, origin, depth
-	Ray	ray(dir, eye , 0);
+	// params: direction, origin, depth, background_color
+	Ray	ray(dir, eye , 0, background);
 
 	Image bild(Xresolution, Yresolution);
 

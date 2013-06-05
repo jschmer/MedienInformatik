@@ -9,12 +9,14 @@ class Ray
 {
 	Vector direction, origin;
 	int	 depth;
+	Color background;
 
 	Color shaded_color(Light *light, Ray &reflectedray, Vector &normal, Objekt *obj);
 
 public:
-	Ray(void) : direction(), origin(), depth (0) {};
-	Ray(Vector &dir, Vector &orig, int d) : direction(dir), origin(orig), depth (d) {};
+	Ray(void) : direction(), origin(), depth (0), background() {};
+	Ray(Vector &dir, Vector &orig, int d) : direction(dir), origin(orig), depth (d), background() {};
+	Ray(Vector &dir, Vector &orig, int d, Color bg) : direction(dir), origin(orig), depth (d), background(bg) {};
 	Color shade(std::vector<Objekt> &, std::vector<Light> &);
 
 	Vector getDirection() { return direction; };

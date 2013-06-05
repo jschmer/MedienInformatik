@@ -40,7 +40,7 @@ Color Ray::shade(vector<Objekt> &objects, vector<Light> &lights)
 
 	if (closest == NULL) {
 		if (depth == 0)
-			cur_color = Color(0.3,0.4,0.5); //background_color;
+			cur_color = background; //background_color;
 		else
 			cur_color = black;
 	} else {
