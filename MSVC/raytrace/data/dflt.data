@@ -11,7 +11,7 @@ resolution      200    200		# Bildbreite Bildhoehe (in Pixeln)
 # 
 # Projektion
 #
-#eyepoint     -100.0   150.0      150.0	# Auge-Koordinaten
+eyepoint     -100.0   150.0      150.0	# Auge-Koordinaten
 #lookat        -15.0    25.0      -40.0	# Punkt, auf den das Auge schaut
 #fovy            55			# Field-of-view-Winkel
 #aspect          1.0			# Verhaeltnis Breite zu Hoehe

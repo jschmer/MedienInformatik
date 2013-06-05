@@ -57,6 +57,7 @@ extern void add_objekt(char *ns, char *np);
 extern void add_light(char *n, double dirx, double diry, double dirz, double colr, double colg, double colb);
 
 extern void define_resolution(int width, int height);
+extern void define_eye(double x, double y, double z);
 %}
 
 
@@ -77,7 +78,7 @@ extern void define_resolution(int width, int height);
 %%
 
 scene 
-    : picture_parameters /* some_viewing_parameters global_lighting */ geometry
+    : picture_parameters some_viewing_parameters /* global_lighting */ geometry
     ;
 
 some_viewing_parameters
@@ -142,7 +143,10 @@ background
 
 eyepoint
     : EYEPOINT realVal realVal realVal
-      { printf("eyepoint %f %f %f\n", $2, $3, $4 ); }
+      {
+		printf("eyepoint %f %f %f\n", $2, $3, $4 );
+		define_eye($2, $3, $4);
+	  }
     ;
 
 lookat

@@ -20,6 +20,8 @@ vector<Light> lights;
 int g_width  = 1250;
 int g_height = 1250;
 
+Vector eye(0, 0, SCREENHEIGHT * 8.0);
+
 extern "C" {
 	extern FILE *yyin;
 	int yyparse();
@@ -69,6 +71,10 @@ extern "C" {
 		g_width = width;
 		g_height = height;
 	}
+
+	void define_eye(double x, double y, double z) {
+		eye = Vector(x, y, z);
+	}
 }
 
 int main(int argc, _TCHAR* argv[])
@@ -95,7 +101,7 @@ int main(int argc, _TCHAR* argv[])
 	double dx = SCREENWIDTH / (double)Xresolution;
 	double dy = SCREENHEIGHT / (double)Yresolution;
 	double y = -0.5 * SCREENHEIGHT;
-	Vector eye(0, 0, SCREENHEIGHT * 8.0);
+	
 	Ray	ray(Vector(1,0,0), eye ,0);
 
 	Image bild(Xresolution, Yresolution);
