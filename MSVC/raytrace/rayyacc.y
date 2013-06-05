@@ -55,6 +55,8 @@ extern void add_quadric(char *n, double a, double b, double c, double d, double 
 extern void add_property(char *n, double ar, double ag, double ab, double r, double g, double b, double s, double m);
 extern void add_objekt(char *ns, char *np);
 extern void add_light(char *n, double dirx, double diry, double dirz, double colr, double colg, double colb);
+
+extern void define_resolution(int width, int height);
 %}
 
 
@@ -75,7 +77,7 @@ extern void add_light(char *n, double dirx, double diry, double dirz, double col
 %%
 
 scene 
-    : /* picture_parameters some_viewing_parameters global_lighting */ geometry
+    : picture_parameters /* some_viewing_parameters global_lighting */ geometry
     ;
 
 some_viewing_parameters
@@ -126,7 +128,10 @@ viewing_parameter
 
 resolution
     : RESOLUTION index index
-      { printf("resolution %d %d\n", $2, $3 ); }
+      {
+		printf("resolution %d %d\n", $2, $3 );
+		define_resolution($2, $3);
+	  }
     ;
 
 background

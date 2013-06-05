@@ -14,7 +14,7 @@ public:
 	Objekt(Surface *s, Property *p) : surface(s), properties(p) {};
 
 	Property getProperty()  { return *properties; };
-	Surface getSurface()  { return *surface; };
+	const Surface& getSurface()  { return *surface; };
 
 	Vector get_normal(Vector &v);
 };

@@ -17,6 +17,9 @@ vector<Property> properties;
 vector<Objekt> objekte;
 vector<Light> lights;
 
+int g_width  = 1250;
+int g_height = 1250;
+
 extern "C" {
 	extern FILE *yyin;
 	int yyparse();
@@ -61,21 +64,34 @@ extern "C" {
 		objekte.push_back(Objekt(s, p));
 		fprintf(stderr, "  adding object: surface %s, property %s\n", ns, np);
 	}
+
+	void define_resolution(int width, int height) {
+		g_width = width;
+		g_height = height;
+	}
 }
 
 int main(int argc, _TCHAR* argv[])
 {
+	printf(">>> Reading input...\n");
+
 	/* parse the input file */
-	yyin = fopen("data/dflt.data","r");
+	auto file = "data/dflt.data";
+	yyin = fopen(file, "r");
 	if(yyin == NULL) {
-		fprintf(stderr, "Error: Konnte Datei nicht öffnen\n");
+		fprintf(stderr, "Error: Konnte Datei \"%s\" nicht oeffnen\n", file);
 		return 1;
 	}
 	yyparse();
 	fclose (yyin);
 	
-	int Xresolution = 1250;
-	int Yresolution = 1250;
+	printf(">>> Reading input DONE!\n\n");
+
+	int Xresolution = g_width;
+	int Yresolution = g_height;
+
+	printf("Using resolution: %d %d\n\n", Xresolution, Yresolution);
+
 	double dx = SCREENWIDTH / (double)Xresolution;
 	double dy = SCREENHEIGHT / (double)Yresolution;
 	double y = -0.5 * SCREENHEIGHT;

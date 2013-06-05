@@ -5,7 +5,7 @@
 #
 # Bild-Parameter
 #
-#resolution      200    200		# Bildbreite Bildhoehe (in Pixeln)
+resolution      200    200		# Bildbreite Bildhoehe (in Pixeln)
 #background	0.0	0.0	0.0		    # Hintergrundfarbe schwarz
 
 # 
