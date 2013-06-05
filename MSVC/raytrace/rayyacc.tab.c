@@ -191,6 +191,7 @@ extern void add_light(char *n, double dirx, double diry, double dirz, double col
 
 extern void define_resolution(int width, int height);
 extern void define_eye(double x, double y, double z);
+extern void define_lookat(double x, double y, double z);
 
 
 
@@ -504,14 +505,14 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    81,    81,    86,    86,   108,   109,   113,   114,   118,
-     119,   123,   124,   125,   126,   127,   131,   139,   145,   153,
-     158,   163,   168,   179,   183,   187,   191,   179,   198,   202,
-     203,   207,   208,   212,   222,   221,   229,   233,   234,   238,
-     243,   247,   248,   253,   252,   259,   260,   264,   269,   273,
-     274,   278,   286,   295,   304,   311,   318,   322,   323,   327,
-     336,   340,   341,   344,   351,   359,   369,   371,   394,   396,
-     400
+       0,    82,    82,    87,    87,   109,   110,   114,   115,   119,
+     120,   124,   125,   126,   127,   128,   132,   140,   146,   154,
+     162,   167,   172,   183,   187,   191,   195,   183,   202,   206,
+     207,   211,   212,   216,   226,   225,   233,   237,   238,   242,
+     247,   251,   252,   257,   256,   263,   264,   268,   273,   277,
+     278,   282,   290,   299,   308,   315,   322,   326,   327,   331,
+     340,   344,   345,   348,   355,   363,   373,   375,   398,   400,
+     404
 };
 #endif
 
@@ -1507,7 +1508,7 @@ yyreduce:
         case 3:
 
     {
-	fprintf(stderr,"processing viewing parameters...\n");
+	fprintf(stderr,"\n>>> processing viewing parameters...\n");
       ;}
     break;
 
@@ -1550,7 +1551,10 @@ yyreduce:
 
   case 19:
 
-    { printf("lookat %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval) ); ;}
+    {
+		printf("lookat %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval) );
+		define_lookat((yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
+	  ;}
     break;
 
   case 20:
@@ -1571,28 +1575,28 @@ yyreduce:
   case 23:
 
     {
-	fprintf(stderr, "processing surfaces...\n");
+	fprintf(stderr, "\n>>> processing surfaces...\n");
       ;}
     break;
 
   case 24:
 
     {
-	fprintf(stderr, "processing properties...\n");
+	fprintf(stderr, "\n>>> processing properties...\n");
       ;}
     break;
 
   case 25:
 
     {
-	fprintf(stderr, "processing lighting...\n");
+	fprintf(stderr, "\n>>> processing lighting...\n");
       ;}
     break;
 
   case 26:
 
     {
-	fprintf(stderr, "processing objects...\n");
+	fprintf(stderr, "\n>>> processing objects...\n");
       ;}
     break;
 

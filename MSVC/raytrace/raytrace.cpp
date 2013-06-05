@@ -21,6 +21,7 @@ int g_width  = 1250;
 int g_height = 1250;
 
 Vector eye(0, 0, SCREENHEIGHT * 8.0);
+Vector lookat(0, 0, 0);
 
 extern "C" {
 	extern FILE *yyin;
@@ -75,6 +76,9 @@ extern "C" {
 	void define_eye(double x, double y, double z) {
 		eye = Vector(x, y, z);
 	}
+	void define_lookat(double x, double y, double z) {
+		lookat = Vector(x, y, z);
+	}
 }
 
 int main(int argc, _TCHAR* argv[])
@@ -102,7 +106,11 @@ int main(int argc, _TCHAR* argv[])
 	double dy = SCREENHEIGHT / (double)Yresolution;
 	double y = -0.5 * SCREENHEIGHT;
 	
-	Ray	ray(Vector(1,0,0), eye ,0);
+	// calc ray direction
+	auto dir = lookat.vsub(eye).normalize();
+
+	// direction, origin
+	Ray	ray(dir, eye , 0);
 
 	Image bild(Xresolution, Yresolution);
 

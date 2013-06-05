@@ -58,6 +58,7 @@ extern void add_light(char *n, double dirx, double diry, double dirz, double col
 
 extern void define_resolution(int width, int height);
 extern void define_eye(double x, double y, double z);
+extern void define_lookat(double x, double y, double z);
 %}
 
 
@@ -84,7 +85,7 @@ scene
 some_viewing_parameters
     :
       {
-	fprintf(stderr,"processing viewing parameters...\n");
+	fprintf(stderr,"\n>>> processing viewing parameters...\n");
       }
     viewing_parameters
       {
@@ -151,7 +152,10 @@ eyepoint
 
 lookat
     : LOOKAT realVal realVal realVal
-      { printf("lookat %f %f %f\n", $2, $3, $4 ); }
+      {
+		printf("lookat %f %f %f\n", $2, $3, $4 );
+		define_lookat($2, $3, $4);
+	  }
     ;
 
 up
@@ -177,19 +181,19 @@ global_lighting
 geometry 
     : 
       {
-	fprintf(stderr, "processing surfaces...\n");
+	fprintf(stderr, "\n>>> processing surfaces...\n");
       }
     surface_section 
       {
-	fprintf(stderr, "processing properties...\n");
+	fprintf(stderr, "\n>>> processing properties...\n");
       }
     property_section 
       {
-	fprintf(stderr, "processing lighting...\n");
+	fprintf(stderr, "\n>>> processing lighting...\n");
       }
     lighting_section
       {
-	fprintf(stderr, "processing objects...\n");
+	fprintf(stderr, "\n>>> processing objects...\n");
       }
     object_section 
     ;
