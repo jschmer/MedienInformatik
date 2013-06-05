@@ -7,21 +7,27 @@
 #include "Image.h"
 #include "vector"
 
-const double SCREENWIDTH = 1000;
+const double SCREENWIDTH  = 1000;
 const double SCREENHEIGHT = 1000;
 
 using namespace std;
 
-vector<Surface> surfaces;
+vector<Surface>  surfaces;
 vector<Property> properties;
-vector<Objekt> objekte;
-vector<Light> lights;
+vector<Objekt>   objekte;
+vector<Light>    lights;
 
+// -- scene parameter ------------
 int g_width  = 1250;
 int g_height = 1250;
 
 Vector eye(0, 0, SCREENHEIGHT * 8.0);
 Vector lookat(0, 0, 0);
+Vector up (0, 1, 0);
+
+auto fovy   = 45.0;
+auto aspect = g_width/static_cast<double>(g_height);
+// -------------------------------
 
 extern "C" {
 	extern FILE *yyin;
@@ -79,14 +85,24 @@ extern "C" {
 	void define_lookat(double x, double y, double z) {
 		lookat = Vector(x, y, z);
 	}
+	void define_up(double x, double y, double z) {
+		up = Vector(x, y, z);
+	}
+	void define_fovy(double dfovy) {
+		fovy = dfovy;
+	}
+	void define_aspect(double daspect) {
+		aspect = daspect;
+	}
 }
 
 int main(int argc, _TCHAR* argv[])
 {
+	/* parse the input file */
 	printf(">>> Reading input...\n");
 
-	/* parse the input file */
 	auto file = "data/dflt.data";
+
 	yyin = fopen(file, "r");
 	if(yyin == NULL) {
 		fprintf(stderr, "Error: Konnte Datei \"%s\" nicht oeffnen\n", file);
@@ -94,26 +110,30 @@ int main(int argc, _TCHAR* argv[])
 	}
 	yyparse();
 	fclose (yyin);
-	
 	printf(">>> Reading input DONE!\n\n");
 
+	// setup image, camera and raytracer variables
 	int Xresolution = g_width;
 	int Yresolution = g_height;
 
-	printf("Using resolution: %d %d\n\n", Xresolution, Yresolution);
+	printf("Using resolution: %d %d\n", Xresolution, Yresolution);
+	printf("Fovy: %f\nAspect: %f\n", fovy, aspect);
 
+	// TODO: integrate fovy and aspect (SCREENWIDTH and SCREENHEIGHT?)
 	double dx = SCREENWIDTH / (double)Xresolution;
 	double dy = SCREENHEIGHT / (double)Yresolution;
 	double y = -0.5 * SCREENHEIGHT;
 	
 	// calc ray direction
-	auto dir = lookat.vsub(eye).normalize();
+	auto dir = lookat.vsub(eye).normalize(); // (lookat - eye).normalize()
 
-	// direction, origin
+	// params: direction, origin, depth
 	Ray	ray(dir, eye , 0);
 
 	Image bild(Xresolution, Yresolution);
 
+	// do the raytracing!
+	printf("\n>>> Rendering...\n");
 	for (int scanline=0; scanline < Yresolution; scanline++) {
 
 		printf("%4d\r", Yresolution-scanline);
@@ -131,9 +151,12 @@ int main(int argc, _TCHAR* argv[])
 				color.b > 1.0 ? 255 : int(255 * color.b));
 		}
 	}
+	printf(">>> Rendering DONE!\n");
 
+	printf("\n>>> Saving picture...\n");
 	char *name = "raytrace-bild.ppm";
 	bild.save(name);
+	printf(">>> Saving picture DONE!\n");
 
 	return 0;
 }

@@ -59,6 +59,9 @@ extern void add_light(char *n, double dirx, double diry, double dirz, double col
 extern void define_resolution(int width, int height);
 extern void define_eye(double x, double y, double z);
 extern void define_lookat(double x, double y, double z);
+extern void define_up(double x, double y, double z);
+extern void define_fovy(double dfovy);
+extern void define_aspect(double daspect);
 %}
 
 
@@ -160,17 +163,26 @@ lookat
 
 up
     : UP realVal realVal realVal
-      { printf("up %f %f %f\n", $2, $3, $4); }
+      {
+		printf("up %f %f %f\n", $2, $3, $4);
+		define_up($2, $3, $4);
+	  }
     ;
 
 fovy
     : FOVY realVal
-      { printf("fovy %f\n", $2); }
+      {
+		printf("fovy %f\n", $2);
+		define_fovy($2);
+	  }
     ;
 
 aspect
     : ASPECT realVal
-      { printf("aspect %f\n", $2 ); }
+      {
+		printf("aspect %f\n", $2 );
+		define_aspect($2);
+	  }
     ;
 
 global_lighting

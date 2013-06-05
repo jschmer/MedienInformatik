@@ -192,6 +192,9 @@ extern void add_light(char *n, double dirx, double diry, double dirz, double col
 extern void define_resolution(int width, int height);
 extern void define_eye(double x, double y, double z);
 extern void define_lookat(double x, double y, double z);
+extern void define_up(double x, double y, double z);
+extern void define_fovy(double dfovy);
+extern void define_aspect(double daspect);
 
 
 
@@ -505,14 +508,14 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    82,    82,    87,    87,   109,   110,   114,   115,   119,
-     120,   124,   125,   126,   127,   128,   132,   140,   146,   154,
-     162,   167,   172,   183,   187,   191,   195,   183,   202,   206,
-     207,   211,   212,   216,   226,   225,   233,   237,   238,   242,
-     247,   251,   252,   257,   256,   263,   264,   268,   273,   277,
-     278,   282,   290,   299,   308,   315,   322,   326,   327,   331,
-     340,   344,   345,   348,   355,   363,   373,   375,   398,   400,
-     404
+       0,    85,    85,    90,    90,   112,   113,   117,   118,   122,
+     123,   127,   128,   129,   130,   131,   135,   143,   149,   157,
+     165,   173,   181,   195,   199,   203,   207,   195,   214,   218,
+     219,   223,   224,   228,   238,   237,   245,   249,   250,   254,
+     259,   263,   264,   269,   268,   275,   276,   280,   285,   289,
+     290,   294,   302,   311,   320,   327,   334,   338,   339,   343,
+     352,   356,   357,   360,   367,   375,   385,   387,   410,   412,
+     416
 };
 #endif
 
@@ -1559,17 +1562,26 @@ yyreduce:
 
   case 20:
 
-    { printf("up %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval)); ;}
+    {
+		printf("up %f %f %f\n", (yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
+		define_up((yyvsp[(2) - (4)].floatval), (yyvsp[(3) - (4)].floatval), (yyvsp[(4) - (4)].floatval));
+	  ;}
     break;
 
   case 21:
 
-    { printf("fovy %f\n", (yyvsp[(2) - (2)].floatval)); ;}
+    {
+		printf("fovy %f\n", (yyvsp[(2) - (2)].floatval));
+		define_fovy((yyvsp[(2) - (2)].floatval));
+	  ;}
     break;
 
   case 22:
 
-    { printf("aspect %f\n", (yyvsp[(2) - (2)].floatval) ); ;}
+    {
+		printf("aspect %f\n", (yyvsp[(2) - (2)].floatval) );
+		define_aspect((yyvsp[(2) - (2)].floatval));
+	  ;}
     break;
 
   case 23:
