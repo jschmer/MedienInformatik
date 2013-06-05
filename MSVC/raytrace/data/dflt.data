@@ -20,7 +20,7 @@ up              0.0     1.0     0.0     # Up-Vektor gibt an, wo oben ist
 #
 #  Globales Licht-Informationen
 #
-#ambience	0.0	0.0	0.0	# schwarz
+ambience	0.0	0.0	0.0	# schwarz
 
 
 #

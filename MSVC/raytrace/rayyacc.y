@@ -47,6 +47,10 @@ struct {
 	} prop;
 
 struct {
+	double ar, ag, ab;
+} ambience;
+
+struct {
 	double dirx, diry, dirz, colr, colg, colb;
 	} light;
 
@@ -83,7 +87,7 @@ extern void define_background_color(double r, double g, double b);
 %%
 
 scene 
-    : picture_parameters some_viewing_parameters /* global_lighting */ geometry
+    : picture_parameters some_viewing_parameters global_lighting geometry
     ;
 
 some_viewing_parameters
@@ -196,25 +200,30 @@ aspect
 
 global_lighting
     : AMBIENCE colorVal colorVal colorVal
-      { printf("ambience %f %f %f\n", $2, $3, $4); }
+      {
+		printf("ambience %f %f %f\n", $2, $3, $4);
+		ambience.ar = $2;
+		ambience.ag = $3;
+		ambience.ab = $4;
+	  }
     ;
 
 geometry 
     : 
       {
-	fprintf(stderr, "\n>>> processing surfaces...\n");
+		fprintf(stderr, "\n>>> processing surfaces...\n");
       }
     surface_section 
       {
-	fprintf(stderr, "\n>>> processing properties...\n");
+		fprintf(stderr, "\n>>> processing properties...\n");
       }
     property_section 
       {
-	fprintf(stderr, "\n>>> processing lighting...\n");
+		fprintf(stderr, "\n>>> processing lighting...\n");
       }
     lighting_section
       {
-	fprintf(stderr, "\n>>> processing objects...\n");
+		fprintf(stderr, "\n>>> processing objects...\n");
       }
     object_section 
     ;
@@ -310,9 +319,9 @@ one_property
 ambient
     : AMBIENT zeroToOneVal zeroToOneVal zeroToOneVal
       { 
-		prop.ar = $2;
-		prop.ag = $3;
-		prop.ab = $4;
+		prop.ar = $2 + ambience.ar;
+		prop.ag = $3 + ambience.ag;
+		prop.ab = $4 + ambience.ab;
       }
     ;
 
