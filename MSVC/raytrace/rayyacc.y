@@ -60,7 +60,7 @@ extern void add_property(char *n, double ar, double ag, double ab, double r, dou
 extern void add_objekt(char *ns, char *np);
 extern void add_light(char *n, double dirx, double diry, double dirz, double colr, double colg, double colb);
 
-extern void define_resolution(int width, int height);
+extern void set_resolution(int width, int height);
 extern void define_eye(double x, double y, double z);
 extern void define_lookat(double x, double y, double z);
 extern void define_up(double x, double y, double z);
@@ -74,11 +74,12 @@ extern void define_background_color(double r, double g, double b);
 %type <intval> index
 %type <floatval> colorVal realVal angleVal zeroToOneVal
 
+// alles seperate tokens, könnte auch jeweils in einer Zeile stehen
 %token <intval> INTEGER
 %token <floatval> FLOAT
 %token <stringval> STRING
 %token RESOLUTION EYEPOINT LOOKAT UP FOVY ASPECT
-%token OBJECT QUADRIC POLY
+%token OBJECT QUADRIC POLY SPHERE
 %token VERTEX
 %token PROPERTY AMBIENT DIFFUSE SPECULAR MIRROR
 %token AMBIENCE BACKGROUND
@@ -140,7 +141,7 @@ resolution
     : RESOLUTION index index
       {
 		printf("resolution %d %d\n", $2, $3 );
-		define_resolution($2, $3);
+		set_resolution($2, $3);
 		resolution_seen = 1;
 	  }
     ;
@@ -240,7 +241,33 @@ surfaces
 one_surface
     : quadric_surface
     | polygon_surface
+	| sphere_surface
     ;
+
+sphere_surface
+	: OBJECT STRING SPHERE realVal realVal realVal realVal
+	  {
+		  float Xm, Ym, Zm, radius;
+		  float a, b, c, d, e, f, g, h, j, k;
+
+		  Xm = $4;
+		  Ym = $5;
+		  Zm = $6;
+		  radius = $7;
+
+		  printf(" <><><><> Sphere!!11 with %f, %f, %f, %f\n", Xm, Ym, Zm, radius);
+
+		  a = e = h = 1.0f;
+		  b = c = f = 0.0f;
+		  d = -2.f * Xm;
+		  g = -2.f * Ym;
+		  j = -2.f * Zm;
+		  k = Xm*Xm + Ym*Ym + Zm*Zm - radius*radius;
+
+		  add_quadric($2, a, b, c, d, e, f, g, h, j, k);
+		  free($2);
+	  }
+	;
 
 quadric_surface
     : OBJECT STRING QUADRIC realVal realVal realVal realVal realVal 

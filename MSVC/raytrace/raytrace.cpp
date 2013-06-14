@@ -76,7 +76,7 @@ extern "C" {
 		fprintf(stderr, "  adding object: surface %s, property %s\n", ns, np);
 	}
 
-	void define_resolution(int width, int height) {
+	void set_resolution(int width, int height) {
 		g_width = width;
 		g_height = height;
 	}

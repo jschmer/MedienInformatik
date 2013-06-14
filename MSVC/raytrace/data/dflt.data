@@ -53,8 +53,8 @@ object geo1 quadric 3.0 0.0 0.0 0.0 1.0 0.0 0.0 1.0 800.0 150000.0
 object geo2 quadric 1.0 0.0 0.0 -400.0 1.0 0.0 -100.0 1.0 200.0 30000.0
 
 # Geometriebeschreibung 3	(Kugel bei <0,-1200,-500> mit Radius 1000)
-object geo3 quadric 1.0 0.0 0.0 0.0 1.0 0.0 2400.0 1.0 1000.0 690000.0
-#object sphere	0.0   -1200.0   -500.0   1000.0
+#object geo3 quadric 1.0 0.0 0.0 0.0 1.0 0.0 2400.0 1.0 1000.0 690000.0
+object sph0 sphere	0.0   -1200.0   -500.0   500.0
 
 
 # Geometriebeschreibung 4	(Kugel bei <-100,25,-300> mit Radius 50)
@@ -118,7 +118,7 @@ color	   0.0	 0.5	 1.0
 # Zuordnungstabelle
 object	 geo1	 prop3
 object	 geo2	 prop1
-object	 geo3	 prop2
+object	 sph0	 prop2
 object	 geo4	 prop3
 object	 geo5	 prop1
 
