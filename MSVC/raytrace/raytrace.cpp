@@ -12,7 +12,7 @@ const double SCREENHEIGHT = 1000;
 
 using namespace std;
 
-vector<Surface>  surfaces;
+vector<QuadricSurface>  surfaces;
 vector<Property> properties;
 vector<Objekt>   objekte;
 vector<Light>    lights;
@@ -41,7 +41,7 @@ extern "C" {
 	};
 	void add_quadric(char *n, double a, double b, double c, double d, double e, double f, double g, double h, double j, double k) {
 		fprintf(stderr,"  adding quadric %s %f %f %f %f %f %f %f %f %f %f %f %f\n", n, a,b,c,d,e,f,g,h,j,k);
-		surfaces.push_back(Surface(n, a,b,c,d,e,f,g,h,j,k));
+		surfaces.push_back(QuadricSurface(n, a,b,c,d,e,f,g,h,j,k));
 	};
 	void add_property(char *n,  double ar, double ag, double ab, double r, double g, double b, double s, double m) {
 		fprintf(stderr,"  adding prop %f %f %f %f %f\n", r, g, b, s, m);
@@ -53,16 +53,18 @@ extern "C" {
 		string ss(ns);
 		string sp(np);
 
-		for(vector<Surface>::iterator i = surfaces.begin(); i != surfaces.end(); ++i) 
-			if(i->getName() == ss) {
-				s = &(*i);
+		for(auto& surface : surfaces) {
+			if(surface.getName() == ss) {
+				s = &surface;
 				break;
 			}
-		for(vector<Property>::iterator i = properties.begin(); i != properties.end(); ++i) 
-			if(i->getName() == sp) {
-				p = &(*i);
+        }
+		for(auto& prop : properties) {
+			if(prop.getName() == sp) {
+				p = &prop;
 				break;
 			}
+        }
 
 		if(s == NULL) {
 			fprintf(stderr, "Surface not found: %s\n", ns);
