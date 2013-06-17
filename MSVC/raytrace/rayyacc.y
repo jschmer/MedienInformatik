@@ -60,6 +60,11 @@ extern void add_property(char *n, double ar, double ag, double ab, double r, dou
 extern void add_objekt(char *ns, char *np);
 extern void add_light(char *n, double dirx, double diry, double dirz, double colr, double colg, double colb);
 
+extern void add_vertex(double x, double y, double z);
+extern void add_index(int idx);
+extern void add_triangle(const char* name, double idx0, double idx1, double idx2);
+extern void add_quad(double idx0, double idx1, double idx2, double idx3);
+
 extern void set_resolution(int width, int height);
 extern void define_eye(double x, double y, double z);
 extern void define_lookat(double x, double y, double z);
@@ -281,9 +286,14 @@ quadric_surface
 polygon_surface
     : OBJECT STRING POLY 
       {
-	printf("object poly\n"); 
+	    printf("object poly %s\n", $2); 
       }
       vertex_section polygon_section
+      {
+	    printf("object poly end \"%s\"\n", $2);
+        add_poly($2);
+        free($2); 
+      }
     ;
 
 vertex_section
@@ -297,7 +307,10 @@ vertices
 
 one_vertex
     : VERTEX realVal realVal realVal
-      { printf("vertex %f %f %f\n", $2, $3, $4); }
+      {
+        printf("vertex %f %f %f\n", $2, $3, $4);
+        add_vertex($2, $3, $4);
+      }
     ;
 
 polygon_section
@@ -323,7 +336,7 @@ indices
 
 one_index
 	: index
-	{ printf("polygon idx %d\n", $1); }
+	{ printf(" %d ", $1); add_index($1); }
 	;
 
 property_section
@@ -362,7 +375,7 @@ diffuse
     ;
 
 specular
-    : SPECULAR  zeroToOneVal /* realVal */
+    : SPECULAR  zeroToOneVal realVal
       { 
 		prop.s = $2;
       }
